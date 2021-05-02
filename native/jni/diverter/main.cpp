@@ -13,6 +13,10 @@ int main() {
     gr_clear();
     gr_color(255, 255, 255, 128);
     gr_fill(0, 0, 400, 400);
+    // TODO: maybe we should change font size by detecting device DPI somehow
+    // (e.g. using the estimated characters per line; if larger than a threshold
+    //       then switch to the larger font)
+    gr_text(gr_sys_font(), 0, 410, "Hello, world", false);
     gr_flip();
     
     while (true) {

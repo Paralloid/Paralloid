@@ -55,4 +55,8 @@ chmod 0755 rootfs/bin/input-waiter
 cp native/libs/armeabi-v7a/diverter rootfs/bin/diverter
 chmod 0755 rootfs/bin/diverter
 
+mkdir -p rootfs/res/images
+cp files/fonts/12x22.png rootfs/res/images/font.png
+cp files/fonts/18x32.png rootfs/res/images/font_18x32.png
+
 mkfs.ext4 -d rootfs -b 4096 rootfs.img 64m
