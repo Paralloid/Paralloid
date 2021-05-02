@@ -1,2 +1,4 @@
 /rootfs
 /rootfs.img
+/native/libs
+/native/obj

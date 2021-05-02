@@ -1,0 +1,12 @@
+[submodule "native/jni/external/android_system_core"]
+	path = native/jni/external/android_system_core
+	url = https://android.googlesource.com/platform/system/core
+	branch = android11-platform-release
+[submodule "native/jni/external/libdrm"]
+	path = native/jni/external/libdrm
+	url = https://android.googlesource.com/platform/external/libdrm
+	branch = android11-platform-release
+[submodule "native/jni/external/libpng"]
+	path = native/jni/external/libpng
+	url = https://android.googlesource.com/platform/external/libpng
+	branch = android11-platform-release
