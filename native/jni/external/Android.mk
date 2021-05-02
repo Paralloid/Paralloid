@@ -1,7 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
 # Libraries from the AOSP source tree
-# These are required by minui, but note that some functionalitis
+# These are required by minui, but note that some functionalities
 # MAY NOT WORK independently; they are here to satisfy the need for
 # headers / symbols of utility functions but everything may not
 # actually be called. Having them here at least reduces our deviation
