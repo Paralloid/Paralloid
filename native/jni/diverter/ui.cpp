@@ -9,8 +9,10 @@ namespace UI {
     shared_ptr<Menu> menu;
     string menu_title;
     shared_ptr<vector<string>> menu_items;
+    // Item indices start from 0 and end at menu_items->size() - 1
     int selected_item = 0;
     int first_rendered_item = 0;
+    
     GRFont *font = nullptr;
     int font_width = 0, font_height = 0;
     int screen_width = 0, screen_height = 0;
