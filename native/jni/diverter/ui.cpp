@@ -30,6 +30,13 @@ namespace UI {
     int measureTextHeight(string text);
     int measureItemHeight(int idx);
     
+    // Find the last item that can be displayed within remaining_height
+    // assuming `first` is the first item that's going to be rendered
+    int findLastDisplayableItem(int first, int remaining_height);
+    // Find the first item that can be displayed within remaining_height
+    // assuming `last` is the last item that's going to be rendered
+    int findFirstDisplayableItem(int last, int remaining_height);
+    
     int onInputEvent(int fd, uint32_t epevents);
 }
 
@@ -149,8 +156,56 @@ int UI::renderDivider(int cur_y) {
     return cur_y + DIVIDER_MARGIN;
 }
 
+int UI::findLastDisplayableItem(int first, int remaining_height) {
+    int ret = first;
+    int acc_height = 0;
+    for (; ret < menu_items->size(); ret++) {
+        auto item_height = measureItemHeight(ret);
+        if (acc_height + item_height > remaining_height) {
+            // We may have overshot
+            // The case ret == first will be handled in the bounds checks below
+            ret--;
+            break;
+        }
+        acc_height += item_height;
+    }
+    
+    if (ret < first) {
+        ret = first;
+    }
+    
+    if (ret >= menu_items->size()) {
+        ret = menu_items->size() - 1;
+    }
+    
+    return ret;
+}
+
+int UI::findFirstDisplayableItem(int last, int remaining_height) {
+    int ret = last;
+    int acc_height = 0;
+    
+    for (ret = last; ret >= 0; ret--) {
+        auto item_height = measureItemHeight(ret);
+        if (acc_height + item_height > remaining_height) {
+            ret++;
+            break;
+        }
+        acc_height += item_height;
+    }
+    
+    if (ret > last) {
+        ret = last;
+    }
+        
+    if (ret < 0) {
+        ret = 0;
+    }
+    
+    return ret;
+}
+
 int UI::renderMenu(int cur_y) {
-    // TODO: implement auto-paging on overflow
     setForegroundColor();
     
     // Divider above the menu items
@@ -161,42 +216,19 @@ int UI::renderMenu(int cur_y) {
         first_rendered_item = selected_item;
     }
     
-    int last_item = first_rendered_item;
     int remaining_height = screen_height - cur_y - 2 * DIVIDER_MARGIN - 1 - font_height;
-    int acc_height = 0;
-    for (; last_item < menu_items->size(); last_item++) {
-        auto item_height = measureItemHeight(last_item);
-        if (acc_height + item_height > remaining_height) {
-            // We overshot
-            last_item--;
-            break;
-        }
-        acc_height += item_height;
-    }
-    
-    if (last_item >= menu_items->size()) {
-        last_item = menu_items->size() - 1;
-    }
+    int last_item = findLastDisplayableItem(first_rendered_item, remaining_height);
     
     if (last_item < selected_item) {
         // We cannot show selected_item if we keep first_rendered_item unchanged
         // So we calculate first_rendered_item backwards from selected_item assuming
         // selected_item is placed at the very bottom of the screen
-        acc_height = 0;
-        for (first_rendered_item = selected_item; first_rendered_item >= 0; first_rendered_item--) {
-            auto item_height = measureItemHeight(first_rendered_item);
-            if (acc_height + item_height > remaining_height) {
-                first_rendered_item++;
-                break;
-            }
-            acc_height += item_height;
-        }
-        
-        if (first_rendered_item < 0) {
-            first_rendered_item++;
-        }
-        
-        last_item = selected_item;
+        first_rendered_item = findFirstDisplayableItem(selected_item, remaining_height);
+        // There may be space left for more items after selected_item; this is because
+        // we *assumed* selected_item is the last item to display in the last step.
+        // However, if items after selected_item are very short while those before are
+        // really long, then we may have to display more of the latter instead of the former.
+        last_item = findLastDisplayableItem(first_rendered_item, remaining_height);
     }
     
     // Render menu items
