@@ -10,9 +10,10 @@ namespace UI {
     string menu_title;
     shared_ptr<vector<string>> menu_items;
     int selected_item = 0;
+    int first_rendered_item = 0;
     GRFont *font = nullptr;
     int font_width = 0, font_height = 0;
-    int screen_width = 0;
+    int screen_width = 0, screen_height = 0;
     int characters_per_line = 0;
     
     void render();
@@ -27,6 +28,7 @@ namespace UI {
     int renderLine(int cur_y, string line);
     
     int measureTextHeight(string text);
+    int measureItemHeight(int idx);
     
     int onInputEvent(int fd, uint32_t epevents);
 }
@@ -51,6 +53,7 @@ int UI::init() {
        return res;
    
    screen_width = gr_fb_width();
+   screen_height = gr_fb_height();
    
    // minui loads res/images/font.png by default
    font = (GRFont*) gr_sys_font();
@@ -135,6 +138,10 @@ int UI::measureTextHeight(string text) {
     return ret;
 }
 
+int UI::measureItemHeight(int idx) {
+    return 2 * MENU_ITEM_PADDING + measureTextHeight(menu_items->at(idx));
+}
+
 int UI::renderDivider(int cur_y) {
     // A bit of margin between content and divider
     cur_y += DIVIDER_MARGIN;
@@ -149,11 +156,53 @@ int UI::renderMenu(int cur_y) {
     // Divider above the menu items
     cur_y = renderDivider(cur_y);
     
+    // Make sure selected_item is always in view
+    if (first_rendered_item > selected_item) {
+        first_rendered_item = selected_item;
+    }
+    
+    int last_item = first_rendered_item;
+    int remaining_height = screen_height - cur_y - 2 * DIVIDER_MARGIN - 1 - font_height;
+    int acc_height = 0;
+    for (; last_item < menu_items->size(); last_item++) {
+        auto item_height = measureItemHeight(last_item);
+        if (acc_height + item_height > remaining_height) {
+            // We overshot
+            last_item--;
+            break;
+        }
+        acc_height += item_height;
+    }
+    
+    if (last_item >= menu_items->size()) {
+        last_item = menu_items->size() - 1;
+    }
+    
+    if (last_item < selected_item) {
+        // We cannot show selected_item if we keep first_rendered_item unchanged
+        // So we calculate first_rendered_item backwards from selected_item assuming
+        // selected_item is placed at the very bottom of the screen
+        acc_height = 0;
+        for (first_rendered_item = selected_item; first_rendered_item >= 0; first_rendered_item--) {
+            auto item_height = measureItemHeight(first_rendered_item);
+            if (acc_height + item_height > remaining_height) {
+                first_rendered_item++;
+                break;
+            }
+            acc_height += item_height;
+        }
+        
+        if (first_rendered_item < 0) {
+            first_rendered_item++;
+        }
+        
+        last_item = selected_item;
+    }
+    
     // Render menu items
-    int idx = 0;
-    for (auto& item : *menu_items) {
+    for (int idx = first_rendered_item; idx <= last_item; idx++) {
         if (idx == selected_item) {
-            auto item_height = 2 * MENU_ITEM_PADDING + measureTextHeight(item);
+            auto item_height = measureItemHeight(idx);
             gr_fill(0, cur_y, screen_width, cur_y + item_height);
             setForegroundColorInverse();
         } else {
@@ -161,10 +210,8 @@ int UI::renderMenu(int cur_y) {
         }
         
         cur_y += MENU_ITEM_PADDING;
-        cur_y = renderText(cur_y, item);
+        cur_y = renderText(cur_y, menu_items->at(idx));
         cur_y += MENU_ITEM_PADDING;
-        
-        idx++;
     }
     
     setForegroundColor();
