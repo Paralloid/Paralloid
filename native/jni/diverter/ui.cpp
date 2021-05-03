@@ -10,7 +10,7 @@ namespace UI {
     string menu_title;
     shared_ptr<vector<string>> menu_items;
     int selected_item = 0;
-    const GRFont *font = nullptr;
+    GRFont *font = nullptr;
     int font_width = 0, font_height = 0;
     int screen_width = 0;
     int characters_per_line = 0;
@@ -49,11 +49,17 @@ int UI::init() {
    
    screen_width = gr_fb_width();
    
-   // TODO: Load normal / large font based on resolution
-   font = gr_sys_font();
+   // minui loads res/images/font.png by default
+   font = (GRFont*) gr_sys_font();
    gr_font_size(font, &font_width, &font_height);
-   
    characters_per_line = (screen_width - 2 * SIDE_PADDING) / font_width;
+   
+   if (characters_per_line >= 32) {
+       // Use larger fonts on high-resolution screens
+       gr_init_font("font_18x32", &font);
+       gr_font_size(font, &font_width, &font_height);
+       characters_per_line = (screen_width - 2 * SIDE_PADDING) / font_width;
+   }
    
    return 0;
 }
