@@ -26,6 +26,8 @@ namespace UI {
     // Breaks up long lines by default
     int renderLine(int cur_y, string line);
     
+    int measureTextHeight(string text);
+    
     int onInputEvent(int fd, uint32_t epevents);
 }
 
@@ -121,6 +123,18 @@ int UI::renderTitle(int cur_y) {
     return renderText(cur_y, menu_title);
 }
 
+int UI::measureTextHeight(string text) {
+    int ret = 0;
+    istringstream s(text);
+    string token;
+    while (getline(s, token, '\n')) {
+        auto len = token.length();
+        auto lines = len / characters_per_line + (len % characters_per_line != 0);
+        ret += lines * font_height;
+    }
+    return ret;
+}
+
 int UI::renderDivider(int cur_y) {
     // A bit of margin between content and divider
     cur_y += DIVIDER_MARGIN;
@@ -138,27 +152,22 @@ int UI::renderMenu(int cur_y) {
     // Render menu items
     int idx = 0;
     for (auto& item : *menu_items) {
-        int orig_y = cur_y;
-        
-        cur_y += MENU_ITEM_PADDING;
-        cur_y = renderText(cur_y, item);
-        
         if (idx == selected_item) {
-            // We can only know the height of the item text after
-            // rendering, so for selected items, we need to render twice,
-            // once to calculate the height of the item, then again
-            // to render the selected background and text on the background
-            gr_fill(0, orig_y, screen_width, cur_y + MENU_ITEM_PADDING);
+            auto item_height = 2 * MENU_ITEM_PADDING + measureTextHeight(item);
+            gr_fill(0, cur_y, screen_width, cur_y + item_height);
             setForegroundColorInverse();
-            cur_y = orig_y + MENU_ITEM_PADDING;
-            cur_y = renderText(cur_y, item);
+        } else {
             setForegroundColor();
         }
         
         cur_y += MENU_ITEM_PADDING;
+        cur_y = renderText(cur_y, item);
+        cur_y += MENU_ITEM_PADDING;
         
         idx++;
     }
+    
+    setForegroundColor();
     
     // Divider below the menu items
     cur_y = renderDivider(cur_y);
