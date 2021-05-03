@@ -1,4 +1,5 @@
 #include "ui.h"
+#include <linux/input.h>
 #include <sstream>
 #include <string>
 
@@ -23,6 +24,8 @@ namespace UI {
     // Text rendering routines with multi-line support
     int renderText(int cur_y, string text);
     int renderLine(int cur_y, string line);
+    
+    int onInputEvent(int fd, uint32_t epevents);
 }
 
 using namespace UI;
@@ -154,4 +157,44 @@ int UI::renderMenu(int cur_y) {
     cur_y = renderDivider(cur_y);
     
     return cur_y;
+}
+
+
+void UI::runForever() {
+    ev_init(&onInputEvent, false);
+    while (true) {
+        if (!ev_wait(500)) {
+            ev_dispatch();
+        }
+    }
+}
+
+int UI::onInputEvent(int fd, uint32_t epevents) {
+    struct input_event ev;
+    if (ev_get_input(fd, epevents, &ev) == -1) {
+        return -1;
+    }
+    
+    if (ev.type != EV_KEY) {
+        return -1;
+    }
+    
+    if (ev.value != 0) {
+        // We only handle key up events (value == 0)
+        return -1;
+    }
+    
+    if (ev.code == KEY_VOLUMEUP || ev.code == KEY_UP) {
+        if (selected_item > 0) {
+            selected_item--;
+            render();
+        }
+    } else if (ev.code == KEY_VOLUMEDOWN || ev.code == KEY_DOWN) {
+        if (selected_item < menu_items->size() - 1) {
+            selected_item++;
+            render();
+        }
+    }
+    
+    return 0;
 }

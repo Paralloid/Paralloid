@@ -25,4 +25,6 @@ namespace UI {
     void exit();
     // The new menu is rendered immediately
     void switchMenu(shared_ptr<Menu> menu);
+    // Run the event loop
+    void runForever();
 }

@@ -37,11 +37,7 @@ int main() {
     
     UI::init();
     UI::switchMenu(main_menu);
-    
-    while (true) {
-        sleep(1000);
-    }
-    
+    UI::runForever();
     UI::exit();
     return 0;
 }
