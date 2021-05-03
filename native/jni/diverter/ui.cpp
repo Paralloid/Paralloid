@@ -284,13 +284,19 @@ int UI::onInputEvent(int fd, uint32_t epevents) {
     if (ev.code == KEY_VOLUMEUP || ev.code == KEY_UP) {
         if (selected_item > 0) {
             selected_item--;
-            render();
+        } else {
+            selected_item = menu_items->size() - 1;
         }
+        
+        render();
     } else if (ev.code == KEY_VOLUMEDOWN || ev.code == KEY_DOWN) {
         if (selected_item < menu_items->size() - 1) {
             selected_item++;
-            render();
+        } else {
+            selected_item = 0;
         }
+        
+        render();
     }
     
     return 0;
