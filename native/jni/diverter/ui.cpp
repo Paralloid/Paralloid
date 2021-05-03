@@ -23,6 +23,7 @@ namespace UI {
     int renderMenu(int cur_y);
     // Text rendering routines with multi-line support
     int renderText(int cur_y, string text);
+    // Breaks up long lines by default
     int renderLine(int cur_y, string line);
     
     int onInputEvent(int fd, uint32_t epevents);
