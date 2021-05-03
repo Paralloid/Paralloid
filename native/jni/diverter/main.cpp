@@ -1,28 +1,47 @@
+#include "ui.h"
 #include <iostream>
 #include <minui/minui.h>
 #include <unistd.h>
 
 using namespace std;
 
-int main() {
-    if (gr_init() < 0) {
-        cout << "minui init failed" << endl;
+class MainMenu : public UI::Menu {
+private:
+    shared_ptr<vector<string>> items;
+public:
+    MainMenu() {
+        items = make_shared<vector<string>>();
+        items->push_back("Boot from internal storage");
+        items->push_back("Boot from external SD card");
     }
     
-    gr_color(0, 0, 0, 0);
-    gr_clear();
-    gr_color(255, 255, 255, 128);
-    gr_fill(0, 0, 400, 400);
-    // TODO: maybe we should change font size by detecting device DPI somehow
-    // (e.g. using the estimated characters per line; if larger than a threshold
-    //       then switch to the larger font)
-    gr_text(gr_sys_font(), 0, 410, "Hello, world", false);
-    gr_flip();
+    string getTitle() {
+        return "Boot Diverter";
+    }
+    
+    shared_ptr<vector<string>> getItems() {
+        return items;
+    }
+    
+    void onItemSelected(int id) {
+        // TODO
+    }
+};
+
+// Menu instances
+shared_ptr<UI::Menu> main_menu;
+
+int main() {
+    // Initialize the menus
+    main_menu = make_shared<MainMenu>();
+    
+    UI::init();
+    UI::switchMenu(main_menu);
     
     while (true) {
         sleep(1000);
     }
     
-    gr_exit();
+    UI::exit();
     return 0;
 }
