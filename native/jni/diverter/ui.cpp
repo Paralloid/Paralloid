@@ -1,5 +1,6 @@
 #include "ui.h"
 #include <linux/input.h>
+#include <minui/minui.h>
 #include <sstream>
 #include <string>
 
