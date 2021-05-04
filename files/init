@@ -161,7 +161,7 @@ for k in $(seq 1 15);do
     [ -n "$sdcard" ] && break
     sleep 1
 done
-if ! $foundTarget && [ -n "$sdcard" ] && [ -b "$sdcard" ];then
+if [ -n "$sdcard" ] && [ -b "$sdcard" ];then
     mkdir /dev/mntSD
     mount -o rw "$sdcard" /dev/mntSD
 fi

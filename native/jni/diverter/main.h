@@ -2,6 +2,8 @@
 #include "ui.h"
 #include <string>
 
+#define EXT_SDCARD_BASE_PATH "/dev/mntSD/Diverter"
+
 using namespace std;
 
 extern shared_ptr<UI::Menu> main_menu;
