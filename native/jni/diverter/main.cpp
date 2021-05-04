@@ -15,26 +15,29 @@ void boot_target(const char *target) {
     execl("/bin/sh", "sh", "/bin/boot-target", target, (char *) NULL);
 }
 
+#define ACTION_BOOT_INTERNAL 1001
+#define ACTION_BOOT_SDCARD   1002
+
 class MainMenu : public UI::Menu {
 private:
-    shared_ptr<vector<string>> items;
+    shared_ptr<vector<UI::MenuItem>> items;
 public:
     MainMenu() {
-        items = make_shared<vector<string>>();
-        items->push_back("Boot from internal storage");
-        items->push_back("Boot from external SD card");
+        items = make_shared<vector<UI::MenuItem>>();
+        items->push_back(UI::MenuItem(ACTION_BOOT_INTERNAL, "Boot from internal storage"));
+        items->push_back(UI::MenuItem(ACTION_BOOT_SDCARD, "Boot from external SD card"));
     }
     
     string getTitle() {
         return "Boot Diverter";
     }
     
-    shared_ptr<vector<string>> getItems() {
+    shared_ptr<vector<UI::MenuItem>> getItems() {
         return items;
     }
     
-    void onItemSelected(int id) {
-        if (id == 0) {
+    void onItemSelected(int action) {
+        if (action == ACTION_BOOT_INTERNAL) {
             boot_target("internal");
         }
     }

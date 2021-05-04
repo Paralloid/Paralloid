@@ -2,14 +2,13 @@
 #include <linux/input.h>
 #include <minui/minui.h>
 #include <sstream>
-#include <string>
 
 using namespace std;
 
 namespace UI {
     shared_ptr<Menu> menu;
     string menu_title;
-    shared_ptr<vector<string>> menu_items;
+    shared_ptr<vector<MenuItem>> menu_items;
     // Item indices start from 0 and end at menu_items->size() - 1
     int selected_item = 0;
     int first_rendered_item = 0;
@@ -149,7 +148,7 @@ int UI::measureTextHeight(string text) {
 }
 
 int UI::measureItemHeight(int idx) {
-    return 2 * MENU_ITEM_PADDING + measureTextHeight(menu_items->at(idx));
+    return 2 * MENU_ITEM_PADDING + measureTextHeight(menu_items->at(idx).title);
 }
 
 int UI::renderDivider(int cur_y) {
@@ -245,7 +244,7 @@ int UI::renderMenu(int cur_y) {
         }
         
         cur_y += MENU_ITEM_PADDING;
-        cur_y = renderText(cur_y, menu_items->at(idx));
+        cur_y = renderText(cur_y, menu_items->at(idx).title);
         cur_y += MENU_ITEM_PADDING;
     }
     
@@ -299,7 +298,7 @@ int UI::onInputEvent(int fd, uint32_t epevents) {
         
         render();
     } else if (ev.code == KEY_POWER) {
-        menu->onItemSelected(selected_item);
+        menu->onItemSelected(menu_items->at(selected_item).action);
     }
     
     return 0;

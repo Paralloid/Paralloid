@@ -1,9 +1,19 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <string>
 
 namespace UI {
     using namespace std;
+    
+    struct MenuItem {
+        // A unique action ID associated with the item
+        int action;
+        // The displayed title of the item
+        string title;
+        
+        MenuItem(int action, string title) : action(action), title(title) {}
+    };
     
     class Menu {
     public:
@@ -12,10 +22,9 @@ namespace UI {
         // These functions will only be called once when switchMenu() is
         // invoked and the result will be cached until the menu is replaced.
         virtual string getTitle() = 0;
-        virtual shared_ptr<vector<string>> getItems() = 0;
-        // The ID is the index of the current selected item in the list last
-        // returned by getItems();
-        virtual void onItemSelected(int id) = 0;
+        virtual shared_ptr<vector<MenuItem>> getItems() = 0;
+        // The action ID is supplied by the `action` field in MenuItem
+        virtual void onItemSelected(int action) = 0;
     };
     
     // Must be called before anything in the namespace is used
