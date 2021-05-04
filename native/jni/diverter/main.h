@@ -2,6 +2,7 @@
 #include "ui.h"
 #include <string>
 
+#define INTERNAL_SYSTEM_PATH "/dev/block/mapper/system_phh"
 #define EXT_SDCARD_BASE_PATH "/dev/mntSD/Diverter"
 
 using namespace std;

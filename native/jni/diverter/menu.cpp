@@ -15,7 +15,9 @@ string MainMenu::getTitle() {
 }
 
 void MainMenu::populateItems() {
-    items->push_back(MenuItem(ACTION_BOOT_INTERNAL, "Boot from internal storage"));
+    if (fs::exists(INTERNAL_SYSTEM_PATH)) {
+        items->push_back(MenuItem(ACTION_BOOT_INTERNAL, "Boot from internal storage"));
+    }
     
     if (fs::exists(EXT_SDCARD_BASE_PATH)) {
         items->push_back(MenuItem(ACTION_BOOT_SDCARD, "Boot from external SD card"));
