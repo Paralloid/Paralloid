@@ -8,6 +8,7 @@ using namespace std;
 namespace UI {
     shared_ptr<Menu> menu;
     string menu_title;
+    optional<string> menu_extra_text;
     shared_ptr<vector<MenuItem>> menu_items;
     // Item indices start from 0 and end at menu_items->size() - 1
     int selected_item = 0;
@@ -94,9 +95,15 @@ void UI::exit(string message) {
 
 void UI::switchMenu(shared_ptr<Menu> menu) {
     UI::menu = menu;
+    selected_item = 0;
+    refreshMenu();
+}
+
+void UI::refreshMenu() {
+    if (menu == nullptr) return;
     menu_title = menu->getTitle();
     menu_items = menu->getItems();
-    selected_item = 0;
+    menu_extra_text = menu->getExtraText();
     render();
 }
 
@@ -262,6 +269,10 @@ int UI::renderMenu(int cur_y) {
     // Divider below the menu items
     cur_y = renderDivider(cur_y);
     
+    if (menu_extra_text != nullopt) {
+        cur_y = renderText(cur_y, *menu_extra_text);
+    }
+    
     return cur_y;
 }
 
@@ -269,6 +280,10 @@ int UI::renderMenu(int cur_y) {
 void UI::runForever() {
     ev_init(&onInputEvent, false);
     while (true) {
+        if (menu != nullptr) {
+            menu->onEventLoopIteration();
+        }
+        
         if (!ev_wait(500)) {
             ev_dispatch();
         }
@@ -298,6 +313,7 @@ int UI::onInputEvent(int fd, uint32_t epevents) {
         }
         
         render();
+        menu->onActiveItemChanged(selected_item, menu_items->at(selected_item).action);
     } else if (ev.code == KEY_VOLUMEDOWN || ev.code == KEY_DOWN) {
         if (selected_item < menu_items->size() - 1) {
             selected_item++;
@@ -306,9 +322,15 @@ int UI::onInputEvent(int fd, uint32_t epevents) {
         }
         
         render();
+        menu->onActiveItemChanged(selected_item, menu_items->at(selected_item).action);
     } else if (ev.code == KEY_POWER) {
-        menu->onItemSelected(menu_items->at(selected_item).action);
+        selectCurrentItem();
     }
     
     return 0;
+}
+
+void UI::selectCurrentItem() {
+    if (menu == nullptr) return;
+    menu->onItemSelected(menu_items->at(selected_item).action);
 }

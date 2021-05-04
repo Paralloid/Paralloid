@@ -1,5 +1,6 @@
 #include "menu.h"
 #include "main.h"
+#include <sstream>
 #include <sys/reboot.h>
 
 shared_ptr<vector<MenuItem>> CachedMenu::getItems() {
@@ -10,8 +11,25 @@ shared_ptr<vector<MenuItem>> CachedMenu::getItems() {
     return items;
 }
 
+MainMenu::MainMenu() {
+    // Only start the countdown timer when MainMenu is
+    // created for the first time (there will be only
+    // one instance of MainMenu in the program).
+    start_time = time(nullptr);
+}
+
 string MainMenu::getTitle() {
     return "Boot Diverter";
+}
+
+optional<string> MainMenu::getExtraText() {
+    if (remaining_secs > 0) {
+        ostringstream s;
+        s << "Selecting default option in " << remaining_secs << " seconds...";
+        return s.str();
+    } else {
+        return nullopt;
+    }
 }
 
 void MainMenu::populateItems() {
@@ -26,7 +44,26 @@ void MainMenu::populateItems() {
     items->push_back(MenuItem(ACTION_REBOOT, "Reboot"));
 }
 
+void MainMenu::onActiveItemChanged(int idx, int action) {
+    // If the user changed selection, get rid of the countdown
+    remaining_secs = -1;
+    refreshMenu();
+}
+
+void MainMenu::onEventLoopIteration() {
+    if (remaining_secs == -1) return;
+    
+    remaining_secs = max(0, MAIN_MENU_TIMEOUT - (int) (time(nullptr) - start_time));
+    refreshMenu();
+    
+    if (remaining_secs == 0) {
+        selectCurrentItem();
+    }
+}
+
 void MainMenu::onItemSelected(int action) {
+    remaining_secs = -1;
+    
     if (action == ACTION_BOOT_INTERNAL) {
         boot_target("internal");
     } else if (action == ACTION_BOOT_SDCARD) {

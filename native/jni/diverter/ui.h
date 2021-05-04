@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <optional>
 
 namespace UI {
     using namespace std;
@@ -25,6 +26,9 @@ namespace UI {
         virtual shared_ptr<vector<MenuItem>> getItems() = 0;
         // The action ID is supplied by the `action` field in MenuItem
         virtual void onItemSelected(int action) = 0;
+        virtual void onActiveItemChanged(int idx, int action) {};
+        virtual optional<string> getExtraText() { return nullopt; };
+        virtual void onEventLoopIteration() {};
     };
     
     // Must be called before anything in the namespace is used
@@ -34,6 +38,11 @@ namespace UI {
     void exit(string message = "");
     // The new menu is rendered immediately
     void switchMenu(shared_ptr<Menu> menu);
+    // Refresh the current menu; update the cached title, items and extra_text
+    // without resetting the menu itself and the current selection
+    void refreshMenu();
+    // Invoke selection event of the current active item immediately
+    void selectCurrentItem();
     // Run the event loop
     void runForever();
 }

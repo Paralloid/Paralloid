@@ -1,5 +1,6 @@
 #pragma once
 #include "ui.h"
+#include <ctime>
 #include <filesystem>
 
 using namespace std;
@@ -20,11 +21,20 @@ public:
 #define ACTION_BOOT_INTERNAL 1001
 #define ACTION_BOOT_SDCARD   1002
 #define ACTION_REBOOT        1100
+
+#define MAIN_MENU_TIMEOUT    10
 class MainMenu : public CachedMenu {
+private:
+    int remaining_secs = MAIN_MENU_TIMEOUT;
+    time_t start_time;
 public:
+    MainMenu();
     string getTitle();
     void populateItems();
     void onItemSelected(int action);
+    void onActiveItemChanged(int idx, int action);
+    optional<string> getExtraText();
+    void onEventLoopIteration();
 };
 
 #define ACTION_IMAGE_BASE     1000000
