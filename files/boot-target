@@ -139,6 +139,7 @@ pkill -f mdev
 cat /dev/kmsg > /dev/ttyGS0 &
 
 # COMMENTME: To grab kernel logs to ttyGS0 you need to keep usb gadget open
+gadget=/config/usb_gadget/g1
 echo > $gadget/UDC
 rm $gadget/configs/c.1/f4
 rm $gadget/configs/c.1/f3
