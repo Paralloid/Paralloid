@@ -298,6 +298,8 @@ int UI::onInputEvent(int fd, uint32_t epevents) {
         }
         
         render();
+    } else if (ev.code == KEY_POWER) {
+        menu->onItemSelected(selected_item);
     }
     
     return 0;

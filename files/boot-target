@@ -1,0 +1,74 @@
+#!/bin/sh
+
+TARGET=$1
+
+if [ $TARGET == "internal" ];then
+    mount -o ro /dev/block/mapper/system_phh /target
+else
+    # TODO: Mount images on non-internal partitions
+    exit -1
+fi
+
+# Undo what we did in `init`
+mount -o move /target_tmp/apex /target/apex
+mount -o move /target_tmp/dev /target/dev
+mount -o move /target_tmp/proc /target/proc
+mount -o move /target_tmp/sys /target/sys
+mount -o move /target_tmp/mnt /target/mnt
+mount -o move /target_tmp/debug_ramdisk /target/debug_ramdisk
+mount -o move /target_tmp/metadata /target/metadata
+mount -o move /target_tmp/vendor /target/vendor
+mount -o move /target_tmp/odm /target/odm
+mount -o move /target_tmp/apex /target/apex
+mount -o move /target_tmp/prism /target/prism
+mount -o move /target_tmp/optics /target/optics
+#TODO: Other mount points for non-GSI (system_ext? product?)
+
+# UNCOMMENTME: To grab kernel logs to ttyGS0 you'll need SELinux permissive
+#(cat /proc/cmdline |sed -E 's/androidboot.selinux=[^ ]*//g' |tr -d '\n'; echo " " androidboot.selinux=permissive ) > /dev/cmdline
+#chmod 0400 /dev/cmdline
+#mount -o bind /dev/cmdline /target/proc/cmdline
+
+# UNCOMMENTME: To have unauthenticated adb
+# cp /target/vendor/default.prop /dev/vendor_default.prop
+# sed -i -e '/adb.secure/d' /dev/vendor_default.prop
+# chmod 0400 /dev/vendor_default.prop
+# mount -o bind /dev/vendor_default.prop /target/vendor/default.prop
+
+# TODO: handle sepolicy patching for external image
+
+# Disable /dev/kmsg rate limiting
+echo on > /proc/sys/kernel/printk_devkmsg
+
+touch /dev/booting
+[ -f /dev/do-boot ] && source /dev/do-boot
+
+pkill -f mdev
+
+cat /dev/kmsg > /dev/ttyGS0 &
+
+# COMMENTME: To grab kernel logs to ttyGS0 you need to keep usb gadget open
+echo > $gadget/UDC
+rm $gadget/configs/c.1/f4
+rm $gadget/configs/c.1/f3
+rm $gadget/configs/c.1/f2
+rm $gadget/configs/c.1/f1
+rmdir $gadget/configs/c.1/strings/0x409/
+rmdir $gadget/configs/c.1/strings/0x409
+rmdir $gadget/configs/c.1
+rmdir $gadget/configs/c.1/
+# END OF COMMENTME
+
+echo HAHA > /dev/kmsg
+cd /target
+echo HIHI > /dev/kmsg
+pivot_root /target debug_ramdisk
+echo HEHE > /dev/kmsg
+
+unset PATH
+exec /debug_ramdisk/bin/busybox chroot . /system/bin/init selinux_setup > /dev/kmsg
+
+#telnetd -F
+
+sleep 30
+reboot

@@ -7,6 +7,14 @@
 
 using namespace std;
 
+// `target` can be "internal", which means the system_phh internal partition,
+// or path to the system image file. See the `boot-target` script for details
+void boot_target(const char *target) {
+    // Release the UI resources because we are handing over to the real init
+    UI::exit();
+    execl("/bin/sh", "sh", "/bin/boot-target", target, (char *) NULL);
+}
+
 class MainMenu : public UI::Menu {
 private:
     shared_ptr<vector<string>> items;
@@ -15,19 +23,6 @@ public:
         items = make_shared<vector<string>>();
         items->push_back("Boot from internal storage");
         items->push_back("Boot from external SD card");
-        
-        // TODO: remove these test
-        for (int i = 0; i < 20; i++) {
-            ostringstream s;
-            s << "Test item " << i;
-            items->push_back(s.str());
-            if (i == 3) {
-                items->push_back("Hello another super duper long item text but this is definitely not long enough and I have to come up with more words to fill this thing");
-            }
-            if (i == 15) {
-                items->push_back("Hello super duper long item text I hope this is long enough");
-            }
-        }
     }
     
     string getTitle() {
@@ -39,7 +34,9 @@ public:
     }
     
     void onItemSelected(int id) {
-        // TODO
+        if (id == 0) {
+            boot_target("internal");
+        }
     }
 };
 

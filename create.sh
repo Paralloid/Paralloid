@@ -41,6 +41,9 @@ cp files/init rootfs/system/bin/init
 chmod 0755 rootfs/init
 chmod 0755 rootfs/system/bin/init
 
+cp files/boot-target rootfs/bin/boot-target
+chmod 0755 rootfs/bin/boot-target
+
 cp files/diverter_tools rootfs/bin/diverter_tools
 chmod 0755 rootfs/bin/diverter_tools
 cp files/dmctl rootfs/bin/dmctl
