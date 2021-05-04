@@ -110,6 +110,33 @@ void ImageSelectionMenu::onItemSelected(int action) {
     } else if (action >= ACTION_IMAGE_BASE) {
         int img_idx = action - ACTION_IMAGE_BASE;
         auto path = base_path / fs::path(images.at(img_idx));
-        boot_target(path.string());
+        if (!fs::exists(path.parent_path() / "userdata.img")) {
+            switchMenu(make_shared<BootConfirmationMenu>(
+                "About to create a userdata image (8 GiB by default) for this boot target.\n"
+                "This may not work or can take extremely long "
+                "depending on the underlying filesystem.\n"
+                "If this fails, you can always create the image manually.\n"
+                "Continue?",
+                path));
+        } else {
+            boot_target(path.string());
+        }
+    }
+}
+
+string BootConfirmationMenu::getTitle() {
+    return message;
+}
+
+void BootConfirmationMenu::populateItems() {
+    items->push_back(MenuItem(ACTION_YES, "Yes"));
+    items->push_back(MenuItem(ACTION_NO, "No"));
+}
+
+void BootConfirmationMenu::onItemSelected(int action) {
+    if (action == ACTION_YES) {
+        boot_target(image_path.string());
+    } else if (action == ACTION_NO) {
+        switchMenu(main_menu);
     }
 }

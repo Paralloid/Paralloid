@@ -52,3 +52,17 @@ public:
     void populateItems();
     void onItemSelected(int action);
 };
+
+#define ACTION_YES            1001
+#define ACTION_NO             1002
+class BootConfirmationMenu : public CachedMenu {
+private:
+    string message;
+    fs::path image_path;
+public:
+    BootConfirmationMenu(string message, fs::path image_path)
+      : message(message), image_path(image_path) {};
+    string getTitle();
+    void populateItems();
+    void onItemSelected(int action);
+};
