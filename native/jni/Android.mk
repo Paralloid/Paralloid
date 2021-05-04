@@ -31,6 +31,7 @@ LOCAL_STATIC_LIBRARIES := minui liblog
 LOCAL_SRC_FILES := \
     diverter/main.cpp \
     diverter/ui.cpp \
+    diverter/menu.cpp \
     
 LOCAL_LDLIBS += -lz
     
