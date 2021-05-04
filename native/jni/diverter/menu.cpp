@@ -1,5 +1,6 @@
 #include "menu.h"
 #include "main.h"
+#include <sys/reboot.h>
 
 shared_ptr<vector<MenuItem>> CachedMenu::getItems() {
     if (items == nullptr) {
@@ -19,6 +20,8 @@ void MainMenu::populateItems() {
     if (fs::exists(EXT_SDCARD_BASE_PATH)) {
         items->push_back(MenuItem(ACTION_BOOT_SDCARD, "Boot from external SD card"));
     }
+    
+    items->push_back(MenuItem(ACTION_REBOOT, "Reboot"));
 }
 
 void MainMenu::onItemSelected(int action) {
@@ -27,6 +30,8 @@ void MainMenu::onItemSelected(int action) {
     } else if (action == ACTION_BOOT_SDCARD) {
         switchMenu(make_shared<ImageSelectionMenu>("Choose image from SD card",
             EXT_SDCARD_BASE_PATH));
+    } else if (action == ACTION_REBOOT) {
+        reboot(RB_AUTOBOOT);
     }
 }
 

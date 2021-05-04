@@ -19,6 +19,7 @@ public:
 
 #define ACTION_BOOT_INTERNAL 1001
 #define ACTION_BOOT_SDCARD   1002
+#define ACTION_REBOOT        1100
 class MainMenu : public CachedMenu {
 public:
     string getTitle();
