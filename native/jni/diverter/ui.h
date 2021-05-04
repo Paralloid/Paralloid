@@ -30,7 +30,8 @@ namespace UI {
     // Must be called before anything in the namespace is used
     int init();
     // Must be called before the program exits or exec() another program
-    void exit();
+    // A last message can be printed on the screen
+    void exit(string message = "");
     // The new menu is rendered immediately
     void switchMenu(shared_ptr<Menu> menu);
     // Run the event loop

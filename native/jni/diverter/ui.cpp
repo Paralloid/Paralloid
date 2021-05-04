@@ -79,7 +79,16 @@ int UI::init() {
    return 0;
 }
 
-void UI::exit() {
+void UI::exit(string message) {
+    gr_color(0, 0, 0, 0);
+    gr_clear();
+    
+    if (message != "") {
+        setForegroundColor();
+        renderText(0, message);
+    }
+    
+    gr_flip();
     gr_exit();
 }
 

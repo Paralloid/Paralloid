@@ -1,5 +1,6 @@
 #include "main.h"
 #include "menu.h"
+#include <sstream>
 #include <unistd.h>
 
 // Menu instances
@@ -16,8 +17,12 @@ int main() {
     return 0;
 }
 
-void boot_target(const char *target) {
+void boot_target(string target) {
+    // Construct a user-friendly exit message to display before the actual system
+    // takes over the framebuffer
+    ostringstream s;
+    s << "Booting target " << target << "...";
     // Release the UI resources because we are handing over to the real init
-    UI::exit();
-    execl("/bin/sh", "sh", "/bin/boot-target", target, (char *) NULL);
+    UI::exit(s.str());
+    execl("/bin/sh", "sh", "/bin/boot-target", target.c_str(), (char *) NULL);
 }
