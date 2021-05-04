@@ -41,7 +41,13 @@ void ImageSelectionMenu::scanImages() {
         images.push_back("system.img");
     }
     
-    // TODO: Actually scan the subdirectories
+    // Scan the subdirectories
+    for (auto& p: fs::directory_iterator(base_path)) {
+        if (!p.is_directory()) continue;
+        if (!fs::exists(p / fs::path("system.img"))) continue;
+        auto relative_path = fs::relative(p / fs::path("system.img"), base_path);
+        images.push_back(relative_path.string());
+    }
 }
 
 void ImageSelectionMenu::populateItems() {
