@@ -16,7 +16,6 @@ public:
 #define ACTION_BOOT_SDCARD   1002
 class MainMenu : public CachedMenu {
 public:
-    MainMenu() = default;
     string getTitle();
     void populateItems();
     void onItemSelected(int action);
