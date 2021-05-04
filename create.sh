@@ -52,8 +52,6 @@ cp files/e2fsdroid rootfs/bin/e2fsdroid
 chmod 0755 rootfs/bin/e2fsdroid
 cp files/mke2fs rootfs/bin/mke2fs
 chmod 0755 rootfs/bin/mke2fs
-cp files/input-waiter rootfs/bin/input-waiter
-chmod 0755 rootfs/bin/input-waiter
 
 cp native/libs/armeabi-v7a/diverter rootfs/bin/diverter
 chmod 0755 rootfs/bin/diverter
