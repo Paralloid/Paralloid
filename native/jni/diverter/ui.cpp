@@ -88,6 +88,13 @@ int UI::init() {
 void UI::exit(string message) {
     gr_color(0, 0, 0, 0);
     gr_clear();
+    // Switch to the other buffer and clear it too
+    // On some devices, the display HALs will somehow flip
+    // the other buffer back, causing the display to revert to
+    // the last menu page, while the system is actually being
+    // booted just fine.
+    gr_flip();
+    gr_clear();
     
     if (message != "") {
         setForegroundColor();
