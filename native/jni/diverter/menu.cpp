@@ -4,8 +4,8 @@
 #include <sys/reboot.h>
 
 #define DEFAULT_HELP_TEXT \
-    "Use volume up/down and power to select\n" \
-    "Long-press volume down for extra options" \
+    "Use volume up/down and power to select. " \
+    "Long-press volume down for extra options." \
 
 void boot_target_with_confirmation(string target, shared_ptr<Menu> current_menu) {
     if (target == "internal") {
