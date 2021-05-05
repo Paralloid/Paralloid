@@ -51,6 +51,7 @@ public:
     ImageSelectionMenu(string title, string base_path)
       : title(title), base_path(fs::path(base_path)) {};
     string getTitle();
+    optional<string> getExtraText();
     void populateItems();
     void onItemSelected(int action);
     void onItemExtraOptionsSelected(int action);

@@ -3,6 +3,10 @@
 #include <sstream>
 #include <sys/reboot.h>
 
+#define DEFAULT_HELP_TEXT \
+    "Use volume up/down and power to select\n" \
+    "Long-press volume down for extra options" \
+
 void boot_target_with_confirmation(string target, shared_ptr<Menu> current_menu) {
     if (target == "internal") {
         boot_target(target);
@@ -48,7 +52,7 @@ optional<string> MainMenu::getExtraText() {
         s << "Selecting default option in " << remaining_secs << " seconds...";
         return s.str();
     } else {
-        return nullopt;
+        return DEFAULT_HELP_TEXT;
     }
 }
 
@@ -104,6 +108,10 @@ void MainMenu::onItemExtraOptionsSelected(int action) {
 
 string ImageSelectionMenu::getTitle() {
     return title;
+}
+
+optional<string> ImageSelectionMenu::getExtraText() {
+    return DEFAULT_HELP_TEXT;
 }
 
 void ImageSelectionMenu::scanImages() {
