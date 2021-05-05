@@ -58,16 +58,27 @@ public:
 
 #define ACTION_YES            1001
 #define ACTION_NO             1002
-class BootConfirmationMenu : public CachedMenu {
+class ConfirmationMenu : public CachedMenu {
 private:
     string message;
-    fs::path image_path;
+    shared_ptr<Menu> last_menu;
+protected:
+    virtual void onConfirmed() = 0;
 public:
-    BootConfirmationMenu(string message, fs::path image_path)
-      : message(message), image_path(image_path) {};
+    ConfirmationMenu(string message, shared_ptr<Menu> last_menu)
+      : message(message), last_menu(last_menu) {};
     string getTitle();
     void populateItems();
     void onItemSelected(int action);
+};
+
+class BootConfirmationMenu : public ConfirmationMenu {
+private:
+    fs::path image_path;
+public:
+    BootConfirmationMenu(string message, shared_ptr<Menu> last_menu, fs::path image_path)
+      : ConfirmationMenu(message, last_menu), image_path(image_path) {};
+    void onConfirmed();
 };
 
 #define ACTION_ADB_DEBUGGABLE 1001

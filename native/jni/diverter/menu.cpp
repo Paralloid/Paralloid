@@ -3,7 +3,7 @@
 #include <sstream>
 #include <sys/reboot.h>
 
-void boot_target_with_confirmation(string target) {
+void boot_target_with_confirmation(string target, shared_ptr<Menu> current_menu) {
     if (target == "internal") {
         boot_target(target);
         return;
@@ -16,7 +16,7 @@ void boot_target_with_confirmation(string target) {
                 "depending on the underlying filesystem.\n"
                 "If this fails, you can always create the image manually.\n"
                 "Continue?",
-                path));
+                current_menu, path));
         } else {
             boot_target(path.string());
         }
@@ -138,7 +138,7 @@ void ImageSelectionMenu::onItemSelected(int action) {
     } else if (action >= ACTION_IMAGE_BASE) {
         int img_idx = action - ACTION_IMAGE_BASE;
         auto path = base_path / fs::path(images.at(img_idx));
-        boot_target_with_confirmation(path.string());
+        boot_target_with_confirmation(path.string(), shared_from_this());
     }
 }
 
@@ -150,21 +150,25 @@ void ImageSelectionMenu::onItemExtraOptionsSelected(int action) {
     switchMenu(make_shared<ExtraOptionsMenu>(path.string(), shared_from_this()));
 }
 
-string BootConfirmationMenu::getTitle() {
+string ConfirmationMenu::getTitle() {
     return message;
 }
 
-void BootConfirmationMenu::populateItems() {
+void ConfirmationMenu::populateItems() {
     items->push_back(MenuItem(ACTION_YES, "Yes"));
     items->push_back(MenuItem(ACTION_NO, "No"));
 }
 
-void BootConfirmationMenu::onItemSelected(int action) {
+void ConfirmationMenu::onItemSelected(int action) {
     if (action == ACTION_YES) {
-        boot_target(image_path.string());
+        onConfirmed();
     } else if (action == ACTION_NO) {
-        switchMenu(main_menu);
+        switchMenu(last_menu);
     }
+}
+
+void BootConfirmationMenu::onConfirmed() {
+    boot_target(image_path.string());
 }
 
 string ExtraOptionsMenu::getTitle() {
@@ -183,6 +187,6 @@ void ExtraOptionsMenu::onItemSelected(int action) {
     } else if (action == ACTION_ADB_DEBUGGABLE) {
         // This will be read from the boot-target script
         setenv("DIVERTER_FORCE_DEBUGGABLE", "1", 1);
-        boot_target_with_confirmation(target);
+        boot_target_with_confirmation(target, shared_from_this());
     }
 }
