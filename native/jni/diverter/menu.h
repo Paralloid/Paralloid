@@ -61,8 +61,8 @@ public:
 class ConfirmationMenu : public CachedMenu {
 private:
     string message;
-    shared_ptr<Menu> last_menu;
 protected:
+    shared_ptr<Menu> last_menu;
     virtual void onConfirmed() = 0;
 public:
     ConfirmationMenu(string message, shared_ptr<Menu> last_menu)
@@ -82,6 +82,7 @@ public:
 };
 
 #define ACTION_ADB_DEBUGGABLE 1001
+#define ACTION_DELETE_DATA    1002
 class ExtraOptionsMenu : public CachedMenu {
 private:
     string target;
@@ -92,4 +93,18 @@ public:
     string getTitle();
     void populateItems();
     void onItemSelected(int action);
+};
+
+class DeleteDataConfirmationMenu : public ConfirmationMenu {
+private:
+    fs::path image_path;
+public:
+    DeleteDataConfirmationMenu(shared_ptr<Menu> last_menu, fs::path image_path)
+      : ConfirmationMenu(
+          "This will delete the userdata image file of the selected target.\n"
+          "At the next boot, you will be prompted to create a new empty image.\n"
+          "Continue?"
+          , last_menu),
+        image_path(image_path) {};
+    void onConfirmed();
 };

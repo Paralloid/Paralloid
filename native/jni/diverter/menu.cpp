@@ -179,6 +179,13 @@ void ExtraOptionsMenu::populateItems() {
     items->push_back(MenuItem(ACTION_BACK, "..."));
     items->push_back(MenuItem(ACTION_ADB_DEBUGGABLE,
         "Boot with forced debuggable mode (ro.adb.secure=0)"));
+    
+    if (target != "internal") {
+        auto path = fs::path(target);
+        if (fs::exists(path.parent_path() / "userdata.img")) {
+            items->push_back(MenuItem(ACTION_DELETE_DATA, "Delete userdata image"));
+        }
+    }
 }
 
 void ExtraOptionsMenu::onItemSelected(int action) {
@@ -188,5 +195,12 @@ void ExtraOptionsMenu::onItemSelected(int action) {
         // This will be read from the boot-target script
         setenv("DIVERTER_FORCE_DEBUGGABLE", "1", 1);
         boot_target_with_confirmation(target, shared_from_this());
+    } else if (action == ACTION_DELETE_DATA) {
+        switchMenu(make_shared<DeleteDataConfirmationMenu>(last_menu, fs::path(target)));
     }
+}
+
+void DeleteDataConfirmationMenu::onConfirmed() {
+    fs::remove(image_path.parent_path() / "userdata.img");
+    switchMenu(last_menu);
 }
