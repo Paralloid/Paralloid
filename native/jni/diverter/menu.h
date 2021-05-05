@@ -32,6 +32,7 @@ public:
     string getTitle();
     void populateItems();
     void onItemSelected(int action);
+    void onItemExtraOptionsSelected(int action);
     void onActiveItemChanged(int idx, int action);
     optional<string> getExtraText();
     void onEventLoopIteration();
@@ -51,6 +52,7 @@ public:
     string getTitle();
     void populateItems();
     void onItemSelected(int action);
+    void onItemExtraOptionsSelected(int action);
 };
 
 #define ACTION_YES            1001
@@ -62,6 +64,19 @@ private:
 public:
     BootConfirmationMenu(string message, fs::path image_path)
       : message(message), image_path(image_path) {};
+    string getTitle();
+    void populateItems();
+    void onItemSelected(int action);
+};
+
+#define ACTION_ADB_DEBUGGABLE 1001
+class ExtraOptionsMenu : public CachedMenu {
+private:
+    string target;
+    shared_ptr<Menu> last_menu;
+public:
+    ExtraOptionsMenu(string target, shared_ptr<Menu> last_menu)
+      : target(target), last_menu(last_menu) {};
     string getTitle();
     void populateItems();
     void onItemSelected(int action);

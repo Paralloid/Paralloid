@@ -1,15 +1,20 @@
 #include "ui.h"
+#include <chrono>
 #include <linux/input.h>
 #include <minui/minui.h>
 #include <sstream>
 
 using namespace std;
+using namespace std::chrono;
+
+#define LONG_PRESS_DURATION_MILLIS 1000
 
 namespace UI {
     shared_ptr<Menu> menu;
     string menu_title;
     optional<string> menu_extra_text;
     shared_ptr<vector<MenuItem>> menu_items;
+    optional<time_point<high_resolution_clock>> volume_down_pressed_ts = nullopt;
     // Item indices start from 0 and end at menu_items->size() - 1
     int selected_item = 0;
     int first_rendered_item = 0;
@@ -300,31 +305,43 @@ int UI::onInputEvent(int fd, uint32_t epevents) {
         return -1;
     }
     
-    if (ev.value != 0) {
-        // We only handle key up events (value == 0)
-        return -1;
-    }
-    
-    if (ev.code == KEY_VOLUMEUP || ev.code == KEY_UP) {
-        if (selected_item > 0) {
-            selected_item--;
-        } else {
-            selected_item = menu_items->size() - 1;
+    if (ev.value == 0) {
+        // Key released
+        if (ev.code == KEY_VOLUMEUP || ev.code == KEY_UP) {
+            if (selected_item > 0) {
+                selected_item--;
+            } else {
+                selected_item = menu_items->size() - 1;
+            }
+
+            render();
+            menu->onActiveItemChanged(selected_item, menu_items->at(selected_item).action);
+        } else if (ev.code == KEY_VOLUMEDOWN || ev.code == KEY_DOWN) {
+            auto now = high_resolution_clock::now();
+            auto pressed_msecs = (volume_down_pressed_ts == nullopt) ? 0 :
+                duration_cast<milliseconds>(now - *volume_down_pressed_ts).count();
+            volume_down_pressed_ts = nullopt;
+            
+            if (pressed_msecs <= LONG_PRESS_DURATION_MILLIS) {
+                if (selected_item < menu_items->size() - 1) {
+                    selected_item++;
+                } else {
+                    selected_item = 0;
+                }
+
+                render();
+                menu->onActiveItemChanged(selected_item, menu_items->at(selected_item).action);
+            } else {
+                menu->onItemExtraOptionsSelected(menu_items->at(selected_item).action);
+            }
+        } else if (ev.code == KEY_POWER) {
+            selectCurrentItem();
         }
-        
-        render();
-        menu->onActiveItemChanged(selected_item, menu_items->at(selected_item).action);
-    } else if (ev.code == KEY_VOLUMEDOWN || ev.code == KEY_DOWN) {
-        if (selected_item < menu_items->size() - 1) {
-            selected_item++;
-        } else {
-            selected_item = 0;
+    } else {
+        // Key pressed
+        if (ev.code == KEY_VOLUMEDOWN || ev.code == KEY_DOWN) {
+            volume_down_pressed_ts = high_resolution_clock::now();
         }
-        
-        render();
-        menu->onActiveItemChanged(selected_item, menu_items->at(selected_item).action);
-    } else if (ev.code == KEY_POWER) {
-        selectCurrentItem();
     }
     
     return 0;

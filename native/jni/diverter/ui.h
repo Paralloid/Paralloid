@@ -16,7 +16,7 @@ namespace UI {
         MenuItem(int action, string title) : action(action), title(title) {}
     };
     
-    class Menu {
+    class Menu : public enable_shared_from_this<Menu> {
     public:
         // Title and items must not change between when the menu is first
         // rendered and when the menu is replaced with another instance
@@ -26,6 +26,7 @@ namespace UI {
         virtual shared_ptr<vector<MenuItem>> getItems() = 0;
         // The action ID is supplied by the `action` field in MenuItem
         virtual void onItemSelected(int action) = 0;
+        virtual void onItemExtraOptionsSelected(int action) {};
         virtual void onActiveItemChanged(int idx, int action) {};
         virtual optional<string> getExtraText() { return nullopt; };
         virtual void onEventLoopIteration() {};

@@ -25,6 +25,15 @@ else
     fi
 fi
 
+# Handle force_debuggable / adb_debug.prop
+if [ "$DIVERTER_FORCE_DEBUGGABLE" == "1" ];then
+    # Without this, `init` on Q does not read /debug_ramdisk/adb_debug.prop
+    export INIT_FORCE_DEBUGGABLE=true
+else
+    # Overwrite our adb_debug.prop with nothing
+    mount -o bind /dev/null /adb_debug.prop
+fi
+
 # Undo what we did in `init`
 mount -o move /target_tmp/apex /target/apex
 mount -o move /target_tmp/dev /target/dev
@@ -119,14 +128,6 @@ fi
 #(cat /proc/cmdline |sed -E 's/androidboot.selinux=[^ ]*//g' |tr -d '\n'; echo " " androidboot.selinux=permissive ) > /dev/cmdline
 #chmod 0400 /dev/cmdline
 #mount -o bind /dev/cmdline /target/proc/cmdline
-
-# UNCOMMENTME: To have unauthenticated adb
-# cp /target/vendor/default.prop /dev/vendor_default.prop
-# sed -i -e '/adb.secure/d' /dev/vendor_default.prop
-# chmod 0400 /dev/vendor_default.prop
-# mount -o bind /dev/vendor_default.prop /target/vendor/default.prop
-
-# TODO: handle sepolicy patching for external image
 
 # Disable /dev/kmsg rate limiting
 echo on > /proc/sys/kernel/printk_devkmsg

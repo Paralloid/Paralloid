@@ -3,6 +3,26 @@
 #include <sstream>
 #include <sys/reboot.h>
 
+void boot_target_with_confirmation(string target) {
+    if (target == "internal") {
+        boot_target(target);
+        return;
+    } else {
+        auto path = fs::path(target);
+        if (!fs::exists(path.parent_path() / "userdata.img")) {
+            switchMenu(make_shared<BootConfirmationMenu>(
+                "About to create a userdata image (8 GiB by default) for this boot target.\n"
+                "This may not work or can take extremely long "
+                "depending on the underlying filesystem.\n"
+                "If this fails, you can always create the image manually.\n"
+                "Continue?",
+                path));
+        } else {
+            boot_target(path.string());
+        }
+    }
+}
+
 shared_ptr<vector<MenuItem>> CachedMenu::getItems() {
     if (items == nullptr) {
         items = make_shared<vector<MenuItem>>();
@@ -74,6 +94,12 @@ void MainMenu::onItemSelected(int action) {
     }
 }
 
+void MainMenu::onItemExtraOptionsSelected(int action) {
+    if (action == ACTION_BOOT_INTERNAL) {
+        switchMenu(make_shared<ExtraOptionsMenu>("internal", shared_from_this()));
+    }
+}
+
 string ImageSelectionMenu::getTitle() {
     return title;
 }
@@ -110,18 +136,16 @@ void ImageSelectionMenu::onItemSelected(int action) {
     } else if (action >= ACTION_IMAGE_BASE) {
         int img_idx = action - ACTION_IMAGE_BASE;
         auto path = base_path / fs::path(images.at(img_idx));
-        if (!fs::exists(path.parent_path() / "userdata.img")) {
-            switchMenu(make_shared<BootConfirmationMenu>(
-                "About to create a userdata image (8 GiB by default) for this boot target.\n"
-                "This may not work or can take extremely long "
-                "depending on the underlying filesystem.\n"
-                "If this fails, you can always create the image manually.\n"
-                "Continue?",
-                path));
-        } else {
-            boot_target(path.string());
-        }
+        boot_target_with_confirmation(path.string());
     }
+}
+
+void ImageSelectionMenu::onItemExtraOptionsSelected(int action) {
+    if (action < ACTION_IMAGE_BASE) return;
+    
+    int img_idx = action - ACTION_IMAGE_BASE;
+    auto path = base_path / fs::path(images.at(img_idx));
+    switchMenu(make_shared<ExtraOptionsMenu>(path.string(), shared_from_this()));
 }
 
 string BootConfirmationMenu::getTitle() {
@@ -138,5 +162,25 @@ void BootConfirmationMenu::onItemSelected(int action) {
         boot_target(image_path.string());
     } else if (action == ACTION_NO) {
         switchMenu(main_menu);
+    }
+}
+
+string ExtraOptionsMenu::getTitle() {
+    return "Extra options for target " + target;
+}
+
+void ExtraOptionsMenu::populateItems() {
+    items->push_back(MenuItem(ACTION_BACK, "..."));
+    items->push_back(MenuItem(ACTION_ADB_DEBUGGABLE,
+        "Boot with forced debuggable mode (ro.adb.secure=0)"));
+}
+
+void ExtraOptionsMenu::onItemSelected(int action) {
+    if (action == ACTION_BACK) {
+        switchMenu(last_menu);
+    } else if (action == ACTION_ADB_DEBUGGABLE) {
+        // This will be read from the boot-target script
+        setenv("DIVERTER_FORCE_DEBUGGABLE", "1", 1);
+        boot_target_with_confirmation(target);
     }
 }
