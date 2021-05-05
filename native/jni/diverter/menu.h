@@ -1,9 +1,10 @@
 #pragma once
 #include "ui.h"
-#include <ctime>
+#include <chrono>
 #include <filesystem>
 
 using namespace std;
+using namespace std::chrono;
 using namespace UI;
 
 namespace fs = filesystem;
@@ -26,7 +27,7 @@ public:
 class MainMenu : public CachedMenu {
 private:
     int remaining_secs = MAIN_MENU_TIMEOUT;
-    time_t start_time;
+    time_point<high_resolution_clock> start_time;
 public:
     MainMenu();
     string getTitle();

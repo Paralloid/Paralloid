@@ -35,7 +35,7 @@ MainMenu::MainMenu() {
     // Only start the countdown timer when MainMenu is
     // created for the first time (there will be only
     // one instance of MainMenu in the program).
-    start_time = time(nullptr);
+    start_time = high_resolution_clock::now();
 }
 
 string MainMenu::getTitle() {
@@ -73,7 +73,9 @@ void MainMenu::onActiveItemChanged(int idx, int action) {
 void MainMenu::onEventLoopIteration() {
     if (remaining_secs == -1) return;
     
-    remaining_secs = max(0, MAIN_MENU_TIMEOUT - (int) (time(nullptr) - start_time));
+    auto now = high_resolution_clock::now();
+    remaining_secs = max(0,
+        MAIN_MENU_TIMEOUT - (int) (duration_cast<seconds>(now - start_time).count()));
     refreshMenu();
     
     if (remaining_secs == 0) {
