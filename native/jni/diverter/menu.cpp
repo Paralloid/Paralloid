@@ -192,6 +192,7 @@ void ExtraOptionsMenu::populateItems() {
         auto path = fs::path(target);
         if (fs::exists(path.parent_path() / "userdata.img")) {
             items->push_back(MenuItem(ACTION_DELETE_DATA, "Delete userdata image"));
+            items->push_back(MenuItem(ACTION_FORMAT_DATA, "Format userdata image"));
         }
     }
 }
@@ -205,10 +206,18 @@ void ExtraOptionsMenu::onItemSelected(int action) {
         boot_target_with_confirmation(target, shared_from_this());
     } else if (action == ACTION_DELETE_DATA) {
         switchMenu(make_shared<DeleteDataConfirmationMenu>(last_menu, fs::path(target)));
+    } else if (action == ACTION_FORMAT_DATA) {
+        switchMenu(make_shared<FormatDataConfirmationMenu>(last_menu, fs::path(target)));
     }
 }
 
 void DeleteDataConfirmationMenu::onConfirmed() {
     fs::remove(image_path.parent_path() / "userdata.img");
+    switchMenu(last_menu);
+}
+
+void FormatDataConfirmationMenu::onConfirmed() {
+    auto path = (target_image_path.parent_path() / "userdata.img").string();
+    format_userdata_image(path);
     switchMenu(last_menu);
 }

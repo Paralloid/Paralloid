@@ -1,6 +1,5 @@
 #include "main.h"
 #include "menu.h"
-#include <unistd.h>
 
 // Menu instances
 shared_ptr<UI::Menu> main_menu;
@@ -22,4 +21,8 @@ void boot_target(string target) {
     // system takes over the framebuffer
     UI::exit("Booting target " + target + "...");
     execl("/bin/sh", "sh", "/bin/boot-target", target.c_str(), (char *) NULL);
+}
+
+void format_userdata_image(string path) {
+    fork_execl("/bin/sh", "sh", "/bin/format-userdata-image", path.c_str());
 }

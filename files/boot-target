@@ -13,7 +13,8 @@ else
             # Fall back to dd if `fallocate` failed
             dd if=/dev/zero of=$TARGET_DIR/userdata.img bs=$((1024*1024)) count=8k
         fi
-        mke2fs -t ext4 -b 4096 -O uninit_bg $TARGET_DIR/userdata.img
+        # Call the same script in /bin that the diverter UI uses
+        format-userdata-image $TARGET_DIR/userdata.img
     fi
     
     # Mount the system images

@@ -84,6 +84,7 @@ public:
 
 #define ACTION_ADB_DEBUGGABLE 1001
 #define ACTION_DELETE_DATA    1002
+#define ACTION_FORMAT_DATA    1003
 class ExtraOptionsMenu : public CachedMenu {
 private:
     string target;
@@ -107,5 +108,19 @@ public:
           "Continue?"
           , last_menu),
         image_path(image_path) {};
+    void onConfirmed();
+};
+
+class FormatDataConfirmationMenu : public ConfirmationMenu {
+private:
+    fs::path target_image_path;
+public:
+    FormatDataConfirmationMenu(shared_ptr<Menu> last_menu, fs::path target_image_path)
+      : ConfirmationMenu(
+          "About to format the userdata image file of the selected target.\n"
+          "This preserves the size of the image.\n"
+          "Continue?"
+        , last_menu),
+        target_image_path(target_image_path) {};
     void onConfirmed();
 };

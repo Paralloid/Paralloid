@@ -1,0 +1,4 @@
+#!/bin/sh
+
+USERDATA_IMAGE="$1"
+yes | mke2fs -t ext4 -b 4096 -O uninit_bg "$USERDATA_IMAGE"
