@@ -8,11 +8,16 @@ if [ $TARGET == "internal" ];then
 else
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
-        fallocate -l 8G $TARGET_DIR/userdata.img
+        # Test if the target filesystem supports fallocate by allocating a small file
+        fallocate -l 1M $TARGET_DIR/test_fallocate.img
         if [ $? -ne 0 ];then
             # Fall back to dd if `fallocate` failed
             dd if=/dev/zero of=$TARGET_DIR/userdata.img bs=$((1024*1024)) count=8k
+        else
+            fallocate -l 8G $TARGET_DIR/userdata.img
         fi
+        # Remove the temporary file
+        rm $TARGET_DIR/test_fallocate.img
         # Call the same script in /bin that the diverter UI uses
         format-userdata-image $TARGET_DIR/userdata.img
     fi
