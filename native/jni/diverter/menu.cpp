@@ -61,6 +61,10 @@ void MainMenu::populateItems() {
         items->push_back(MenuItem(ACTION_BOOT_INTERNAL, "Boot from internal storage"));
     }
     
+    if (fs::exists(USERDATA_BASE_PATH)) {
+        items->push_back(MenuItem(ACTION_BOOT_USERDATA, "Boot from userdata"));
+    }
+    
     if (fs::exists(EXT_SDCARD_BASE_PATH)) {
         items->push_back(MenuItem(ACTION_BOOT_SDCARD, "Boot from external SD card"));
     }
@@ -95,6 +99,9 @@ void MainMenu::onItemSelected(int action) {
     } else if (action == ACTION_BOOT_SDCARD) {
         switchMenu(make_shared<ImageSelectionMenu>("Choose image from SD card",
             EXT_SDCARD_BASE_PATH));
+    } else if (action == ACTION_BOOT_USERDATA) {
+        switchMenu(make_shared<ImageSelectionMenu>("Choose image from userdata",
+            USERDATA_BASE_PATH));
     } else if (action == ACTION_REBOOT) {
         reboot(RB_AUTOBOOT);
     }

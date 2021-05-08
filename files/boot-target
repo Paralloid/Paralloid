@@ -86,6 +86,8 @@ if [ $TARGET != "internal" ];then
     cp /target/system/etc/selinux/plat_sepolicy.cil /dev/override/selinux/
     # Allow kernel to read / write unlabeled files for our loop mount to work
     echo "(allow kernel unlabeled (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+    # Allow kernel to read / write unencrypted_data_file for booting from /data/unencrypted/
+    echo "(allow kernel unencrypted_data_file (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
     # Allow kernel to read / write tmpfs files for our ramdisk to work
     echo "(allow kernel tmpfs (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
 
