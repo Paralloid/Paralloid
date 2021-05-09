@@ -16,12 +16,44 @@
 #include "commands.h"
 #include "fastboot_device.h"
 
+#include <android-base/stringprintf.h>
+#include <images.h>
 #include <sys/reboot.h>
+
+void ListImages(FastbootDevice *device, std::string base_path) {
+    auto images = scanImages(base_path);
+    
+    for (auto& img : images) {
+        device->WriteInfo(android::base::StringPrintf("    %s", img.imageName().c_str()));
+        // For anything to be eligible here, system.img should at least exist
+        device->WriteInfo("      - system");
+        
+        if (fs::exists(img.productImagePath())) {
+            device->WriteInfo("      - product");
+        }
+    }
+}
+
+bool ListImagesHandler(FastbootDevice* device, const std::vector<std::string>& args) {
+    if (fs::exists(USERDATA_BASE_PATH)) {
+        device->WriteInfo("Images in userdata:");
+        ListImages(device, USERDATA_BASE_PATH);
+    }
+    
+    if (fs::exists(EXT_SDCARD_BASE_PATH)) {
+        device->WriteInfo("Images in sdcard:");
+        ListImages(device, EXT_SDCARD_BASE_PATH);
+    }
+    
+    return device->WriteStatus(FastbootResult::OKAY, "Images listed");
+}
 
 bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args) {
     if (args[0] == "oem hello") {
         device->WriteInfo("Hello! I am minfastbootd from boot-diverter");
         return device->WriteStatus(FastbootResult::OKAY, "");
+    } else if (args[0] == "oem list-images") {
+        return ListImagesHandler(device, args);
     } else {
         return device->WriteStatus(FastbootResult::FAIL, "Unsupported OEM command");
     }

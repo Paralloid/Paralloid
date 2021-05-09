@@ -22,9 +22,19 @@ public:
         return image_name;
     }
     
-    fs::path systemImagePath() {
-        return base_path / fs::path(image_name) / "system.img";
+    fs::path imagePath() {
+        return base_path / fs::path(image_name);
     }
+    
+    fs::path systemImagePath() {
+        return imagePath() / "system.img";
+    }
+    
+    fs::path productImagePath() {
+        return imagePath() / "product.img";
+    }
+    
+    // TODO: support more images like system_ext
 };
 
 static std::vector<BootableImage> scanImages(fs::path base_path) {
