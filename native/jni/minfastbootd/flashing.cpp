@@ -26,7 +26,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 int OpenPartitionImage(BootableImage img, const std::string& partition_name, int size) {
-    auto path = (img.imagePath() / (partition_name + ".img")).string();
+    auto path = img.partitionImagePath(partition_name)->string();
     int fd = open(path.c_str(), O_CREAT | O_CLOEXEC | O_SYNC | O_RDWR, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP);
     
     if (fd < 0) {
@@ -139,7 +139,7 @@ int Flash(FastbootDevice* device, const std::string& target) {
     close(fd);
     
     if (res >= 0) {
-        device->WriteInfo("Written to " + (img.imagePath() / (partition_name + ".img")).string());
+        device->WriteInfo("Written to " + img.partitionImagePath(partition_name)->string());
     }
     
     return res;

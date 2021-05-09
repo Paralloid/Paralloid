@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -26,12 +27,20 @@ public:
         return base_path / fs::path(image_name);
     }
     
+    std::optional<fs::path> partitionImagePath(std::string partition_name) {
+        if (partition_name != "system" && partition_name != "product") {
+            return std::nullopt;
+        } else {
+            return imagePath() / (partition_name + ".img");
+        }
+    }
+    
     fs::path systemImagePath() {
-        return imagePath() / "system.img";
+        return *partitionImagePath("system");
     }
     
     fs::path productImagePath() {
-        return imagePath() / "product.img";
+        return *partitionImagePath("product");
     }
     
     // TODO: support more images like system_ext
