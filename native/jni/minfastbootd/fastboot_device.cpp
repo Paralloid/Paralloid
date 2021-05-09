@@ -28,6 +28,8 @@ namespace sph = std::placeholders;
 
 FastbootDevice::FastbootDevice()
     : kCommandMap({
+        {FB_CMD_OEM, OemCmdHandler},
+        {FB_CMD_REBOOT, RebootHandler},
       }) {
     transport_ = std::make_unique<ClientUsbTransport>();
 }

@@ -46,6 +46,7 @@ LOCAL_SRC_FILES := \
     minfastbootd/fastboot_device.cpp \
     minfastbootd/usb_client.cpp \
     minfastbootd/usb.cpp \
+    minfastbootd/commands.cpp \
     
 include $(BUILD_EXECUTABLE)
 

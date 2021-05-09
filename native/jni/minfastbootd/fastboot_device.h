@@ -23,19 +23,7 @@
 #include <vector>
 
 #include "transport.h"
-
-constexpr unsigned int kMaxDownloadSizeDefault = 0x10000000;
-
-enum class FastbootResult {
-    OKAY,
-    FAIL,
-    INFO,
-    DATA,
-};
-
-class FastbootDevice;
-
-using CommandHandler = std::function<bool(FastbootDevice*, const std::vector<std::string>&)>;
+#include "commands.h"
 
 class FastbootDevice {
   public:
