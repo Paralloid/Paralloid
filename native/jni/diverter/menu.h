@@ -1,5 +1,7 @@
 #pragma once
 #include "ui.h"
+#include <images.h>
+
 #include <chrono>
 #include <filesystem>
 
@@ -45,9 +47,8 @@ class ImageSelectionMenu : public CachedMenu {
 private:
     string title;
     fs::path base_path;
-    vector<string> images;
+    vector<BootableImage> images;
     
-    void scanImages();
 public:
     ImageSelectionMenu(string title, string base_path)
       : title(title), base_path(fs::path(base_path)) {};

@@ -121,29 +121,13 @@ optional<string> ImageSelectionMenu::getExtraText() {
     return DEFAULT_HELP_TEXT;
 }
 
-void ImageSelectionMenu::scanImages() {
-    images = vector<string>();
-    
-    if (fs::exists(base_path / fs::path("system.img"))) {
-        images.push_back("system.img");
-    }
-    
-    // Scan the subdirectories
-    for (auto& p: fs::directory_iterator(base_path)) {
-        if (!p.is_directory()) continue;
-        if (!fs::exists(p / fs::path("system.img"))) continue;
-        auto relative_path = fs::relative(p / fs::path("system.img"), base_path);
-        images.push_back(relative_path.string());
-    }
-}
-
 void ImageSelectionMenu::populateItems() {
     items->push_back(MenuItem(ACTION_BACK, "..."));
     
-    scanImages();
+    images = scanImages(base_path);
     
     for (int i = 0; i < images.size(); i++) {
-        items->push_back(MenuItem(ACTION_IMAGE_BASE + i, images.at(i)));
+        items->push_back(MenuItem(ACTION_IMAGE_BASE + i, images.at(i).imageName()));
     }
 }
 
@@ -152,7 +136,7 @@ void ImageSelectionMenu::onItemSelected(int action) {
         switchMenu(main_menu);
     } else if (action >= ACTION_IMAGE_BASE) {
         int img_idx = action - ACTION_IMAGE_BASE;
-        auto path = base_path / fs::path(images.at(img_idx));
+        auto path = images.at(img_idx).systemImagePath();
         boot_target_with_confirmation(path.string(), shared_from_this());
     }
 }
@@ -161,7 +145,7 @@ void ImageSelectionMenu::onItemExtraOptionsSelected(int action) {
     if (action < ACTION_IMAGE_BASE) return;
     
     int img_idx = action - ACTION_IMAGE_BASE;
-    auto path = base_path / fs::path(images.at(img_idx));
+    auto path = images.at(img_idx).systemImagePath();
     switchMenu(make_shared<ExtraOptionsMenu>(path.string(), shared_from_this()));
 }
 

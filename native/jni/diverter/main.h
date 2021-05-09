@@ -4,10 +4,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define INTERNAL_SYSTEM_PATH "/dev/block/mapper/system_phh"
-#define EXT_SDCARD_BASE_PATH "/dev/mntSD/Diverter"
-#define USERDATA_BASE_PATH   "/dev/mntDATA/unencrypted/Diverter"
-
 using namespace std;
 
 extern shared_ptr<UI::Menu> main_menu;

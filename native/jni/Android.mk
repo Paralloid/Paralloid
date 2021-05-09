@@ -28,6 +28,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := diverter
 LOCAL_STATIC_LIBRARIES := minui liblog
 
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/include \
+
 LOCAL_SRC_FILES := \
     diverter/main.cpp \
     diverter/ui.cpp \
