@@ -34,8 +34,12 @@ rm -Rf $gadget/configs
 mkdir $gadget
 echo 0x12d1 > $gadget/idVendor
 echo 0x103A > $gadget/idProduct
+#echo 0x18d1 > $gadget/idVendor
+#echo 0x4ee0 > $gadget/idProduct
 echo 12D1 > /sys/class/android_usb/android0/idVendor
 echo 103A > /sys/class/android_usb/android0/idProduct
+#echo 18D1 > /sys/class/android_usb/android0/idVendor
+#echo 4EE0 > /sys/class/android_usb/android0/idProduct
 echo phh > /sys/class/android_usb/android0/iManufacturer
 echo phh > /sys/class/android_usb/android0/iProduct
 # Some MTK devices won't change serialnumber once it has been set
@@ -58,7 +62,7 @@ echo 'Conf 1' > $gadget/configs/c.1/strings/0x409/configuration
 
 gadgetNr=1
 addGadget() {
-    d=$gadget/functions/${1}.0
+    d=$gadget/functions/${1}
     t=$gadget/configs/c.1/f$gadgetNr
     mkdir $d
     if [ -d $d ];then
@@ -75,20 +79,15 @@ addGadget() {
     fi
 }
 
-addGadget acm
-addGadget rndis
+addGadget acm.0
+addGadget rndis.0
 
 # Setup mass_storage with current dmesg + pstore
-addGadget mass_storage
+addGadget mass_storage.0
 echo 1 > $gadget/functions/mass_storage.0/lun.0/removable
 dmesg > /tmp/tmp-img
 cat /sys/fs/pstore/* >> /tmp/tmp-img
 echo /tmp/tmp-img > $gadget/functions/mass_storage.0/lun.0/file
-
-echo Functions > /dev/kmsg
-ls -l $gadget/functions/c.1 > /dev/kmsg
-echo Configs > /dev/kmsg
-ls -l $gadget/configs/c.1 > /dev/kmsg
 
 # Disable watchdogs
 echo -n V > /dev/watchdog
@@ -96,16 +95,35 @@ echo -n V > /dev/watchdog0
 echo -n V > /dev/watchdog1
 echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 
-echo Functions > /dev/kmsg
-ls -l $gadget/functions/c.1 > /dev/kmsg
-echo Configs > /dev/kmsg
-ls -l $gadget/configs/c.1 > /dev/kmsg
-
 #echo > $gadget/UDC
-echo acm,rndis > /sys/class/android_usb/android0/functions
-ls /sys/class/udc |head -n 1  | cat > $gadget/UDC
+echo acm,rndis,fastboot > /sys/class/android_usb/android0/functions
+echo fastboot > /sys/class/android_usb/android0/f_ffs/aliases
+
+# Enable fastboot function
+mkdir $gadget/functions/ffs.fastboot
+mkdir -p /dev/usb-ffs/fastboot
+mount -t functionfs fastboot /dev/usb-ffs/fastboot
+
+# Enable USB in order to call minfastbootd to initialize FunctionFS
 echo 1 > /sys/devices/virtual/android_usb/android0/enable
-echo 2 > /sys/devices/virtual/android_usb/android0/port_mode
+
+# We must initialize FunctionFS with minfastbootd before adding the fastboot gadget
+# This ordering is important, as otherwise the ffs.fastboot gadget will be ignored
+minfastbootd > /dev/kmsg 2>&1 &
+
+ffs_wait_count=0
+while [ ! -f /dev/.ffs_ready ];do
+    sleep 1
+    ffs_wait_count=$((ffs_wait_count+1))
+    if [ $ffs_wait_count -ge 10 ];then
+        # Don't wait forever; if it didn't work in 10 seconds, abort
+        break
+    fi
+done
+addGadget ffs.fastboot
+# Important: $gadget/UDC must be set *after* all gadgets are added and *after* FunctionFS
+# is initialized. Otherwise, any function added after setting $gadget/UDC will be ignored
+ls /sys/class/udc | head -n 1  | cat > $gadget/UDC
 
 ifconfig -a
 

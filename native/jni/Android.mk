@@ -37,4 +37,16 @@ LOCAL_LDLIBS += -lz
     
 include $(BUILD_EXECUTABLE)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := minfastbootd
+LOCAL_STATIC_LIBRARIES := libbase
+
+LOCAL_SRC_FILES := \
+    minfastbootd/main.cpp \
+    minfastbootd/fastboot_device.cpp \
+    minfastbootd/usb_client.cpp \
+    minfastbootd/usb.cpp \
+    
+include $(BUILD_EXECUTABLE)
+
 include $(LOCAL_PATH)/external/Android.mk

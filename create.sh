@@ -56,7 +56,9 @@ cp files/mke2fs rootfs/bin/mke2fs
 chmod 0755 rootfs/bin/mke2fs
 
 cp native/libs/armeabi-v7a/diverter rootfs/bin/diverter
+cp native/libs/armeabi-v7a/minfastbootd rootfs/bin/minfastbootd
 chmod 0755 rootfs/bin/diverter
+chmod 0755 rootfs/bin/minfastbootd
 
 mkdir -p rootfs/res/images
 cp files/fonts/12x22.png rootfs/res/images/font.png

@@ -147,6 +147,10 @@ pkill -f mdev
 
 cat /dev/kmsg > /dev/ttyGS0 &
 
+# Stop minfastbootd and remove usb functionfs
+pkill -f minfastbootd
+umount /dev/usb-ffs/fastboot
+
 # COMMENTME: To grab kernel logs to ttyGS0 you need to keep usb gadget open
 gadget=/config/usb_gadget/g1
 echo > $gadget/UDC
