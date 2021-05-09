@@ -188,11 +188,17 @@ done
 if [ -n "$sdcard" ] && [ -b "$sdcard" ];then
     mkdir /dev/mntSD
     mount -o rw "$sdcard" /dev/mntSD
+    if [ $? -eq 0 ];then
+        touch /dev/.sdcard_mounted
+    fi
 fi
 
 # Mount userdata too (without decryption)
 mkdir /dev/mntDATA
 mount -o rw /dev/block/by-name/userdata /dev/mntDATA
+if [ $? -eq 0 ];then
+    touch /dev/.userdata_mounted
+fi
 
 # Launch the boot-diverter UI
 exec /bin/diverter > /dev/kmsg 2>&1

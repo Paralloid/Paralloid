@@ -61,6 +61,24 @@ LOCAL_CPPFLAGS := -DLIBLOG_LOG_TAG=1006 -DSNET_EVENT_LOG_TAG=1397638484
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := libsparse
+LOCAL_STATIC_LIBRARIES := libbase
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/android_system_core/libsparse/include \
+    
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
+
+LOCAL_SRC_FILES := \
+    android_system_core/libsparse/backed_block.cpp \
+    android_system_core/libsparse/output_file.cpp \
+    android_system_core/libsparse/sparse.cpp \
+    android_system_core/libsparse/sparse_crc32.cpp \
+    android_system_core/libsparse/sparse_err.cpp \
+    android_system_core/libsparse/sparse_read.cpp \
+    
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := libadf
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/android_system_core/deprecated-adf/libadf/include \

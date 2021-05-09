@@ -42,7 +42,7 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := minfastbootd
-LOCAL_STATIC_LIBRARIES := libbase
+LOCAL_STATIC_LIBRARIES := libbase libsparse
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/include \
@@ -53,7 +53,10 @@ LOCAL_SRC_FILES := \
     minfastbootd/usb_client.cpp \
     minfastbootd/usb.cpp \
     minfastbootd/commands.cpp \
-    
+    minfastbootd/flashing.cpp \
+
+LOCAL_LDLIBS += -lz
+
 include $(BUILD_EXECUTABLE)
 
 include $(LOCAL_PATH)/external/Android.mk

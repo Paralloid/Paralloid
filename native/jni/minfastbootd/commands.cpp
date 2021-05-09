@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 #include "commands.h"
+#include "constants.h"
 #include "fastboot_device.h"
+#include "flashing.h"
 
+#include <iostream>
+
+#include <android-base/parseint.h>
 #include <android-base/stringprintf.h>
 #include <images.h>
 #include <sys/reboot.h>
@@ -63,4 +68,53 @@ bool RebootHandler(FastbootDevice* device, const std::vector<std::string>& args)
     device->WriteStatus(FastbootResult::OKAY, "Rebooting");
     reboot(RB_AUTOBOOT);
     return true;
+}
+
+bool GetVarHandler(FastbootDevice* device, const std::vector<std::string>& args) {
+    if (args[1] == FB_VAR_MAX_DOWNLOAD_SIZE) {
+        // This is needed for max download size to be recognized correctly
+        return device->WriteOkay(android::base::StringPrintf("0x%X", kMaxDownloadSizeDefault));
+    } else {
+        return device->WriteStatus(FastbootResult::FAIL, "Unknown variable");
+    }
+}
+
+bool DownloadHandler(FastbootDevice* device, const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        return device->WriteStatus(FastbootResult::FAIL, "size argument unspecified");
+    }
+    
+    // arg[0] is the command name, arg[1] contains size of data to be downloaded
+    unsigned int size;
+    if (!android::base::ParseUint("0x" + args[1], &size, kMaxDownloadSizeDefault)) {
+        return device->WriteStatus(FastbootResult::FAIL, "Invalid size");
+    }
+    
+    device->download_data().resize(size);
+    
+    if (!device->WriteStatus(FastbootResult::DATA, android::base::StringPrintf("%08x", size))) {
+        return false;
+    }
+    
+    if (device->HandleData(true, &device->download_data())) {
+        return device->WriteStatus(FastbootResult::OKAY, "");
+    }
+    
+    std::cout << "Couldn't download data" << std::endl;
+    return device->WriteStatus(FastbootResult::FAIL, "Couldn't download data");
+}
+
+bool FlashHandler(FastbootDevice* device, const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        return device->WriteStatus(FastbootResult::FAIL, "Invalid arguments");
+    }
+    
+    const auto& target = args[1];
+    int ret = Flash(device, target);
+    
+    if (ret < 0) {
+        return device->WriteStatus(FastbootResult::FAIL, strerror(-ret));
+    }
+    
+    return device->WriteStatus(FastbootResult::OKAY, "Flashing succeeded");
 }

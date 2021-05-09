@@ -30,6 +30,9 @@ FastbootDevice::FastbootDevice()
     : kCommandMap({
         {FB_CMD_OEM, OemCmdHandler},
         {FB_CMD_REBOOT, RebootHandler},
+        {FB_CMD_GETVAR, GetVarHandler},
+        {FB_CMD_DOWNLOAD, DownloadHandler},
+        {FB_CMD_FLASH, FlashHandler},
       }) {
     transport_ = std::make_unique<ClientUsbTransport>();
 }
