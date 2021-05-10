@@ -27,6 +27,17 @@ int OpenPartitionImage(BootableImage img, const std::string& partition_name, int
 // same logic works for files (lseek() beyond the end simply extends
 // the file)
 int FlashRawDataChunk(int fd, const char* data, size_t len) {
+    int cur_pos = lseek64(fd, 0, SEEK_CUR);
+    // Truncate the file to the end of the current data chunk
+    // to allow overwriting a larger image file with a smaller
+    // one (otherwise the file on disk would always occupy
+    // the maximum amount of space it ever did occupy)
+    // We ignore any error this might return, since not all
+    // underlying filesystems do support ftruncate correctly
+    // in all cases (a notable example is VFAT), especially
+    // the case where ftruncate expands the file.
+    ftruncate(fd, cur_pos + len);
+    
     size_t ret = 0;
     while (ret < len) {
         int this_len = std::min(static_cast<size_t>(1048576UL * 8), len - ret);
