@@ -2,11 +2,12 @@
 #include "fastboot_device.h"
 
 #include <fcntl.h>
-#include <images.h>
 #include <sparse/sparse.h>
 
 #include <cstdlib>
 #include <vector>
+
+#include <private/images.h>
 
 constexpr uint32_t SPARSE_HEADER_MAGIC = 0xed26ff3a;
 

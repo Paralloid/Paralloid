@@ -4,24 +4,12 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <sstream>
+
+#include <private/utils.h>
 
 #define INTERNAL_SYSTEM_PATH "/dev/block/mapper/system_phh"
 #define EXT_SDCARD_BASE_PATH "/dev/mntSD/Diverter"
 #define USERDATA_BASE_PATH   "/dev/mntDATA/unencrypted/Diverter"
-
-static std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> result;
-    std::stringstream ss(s);
-    std::string item;
-
-    while (getline(ss, item, delim)) {
-        result.push_back(item);
-    }
-
-    return result;
-}
 
 namespace fs = std::filesystem;
 

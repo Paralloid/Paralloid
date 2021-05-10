@@ -22,8 +22,9 @@
 
 #include <android-base/parseint.h>
 #include <android-base/stringprintf.h>
-#include <images.h>
 #include <sys/reboot.h>
+
+#include <private/images.h>
 
 void ListImages(FastbootDevice *device, std::string base_path) {
     auto images = scanImages(base_path);
