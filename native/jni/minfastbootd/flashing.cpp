@@ -36,6 +36,10 @@ int FlashRawDataChunk(int fd, const char* data, size_t len) {
     // underlying filesystems do support ftruncate correctly
     // in all cases (a notable example is VFAT), especially
     // the case where ftruncate expands the file.
+    // Note that the image might be splitted into multiple sparse
+    // chunks and flashed across multiple Flash() invocations,
+    // so we cannot just truncate the file to the size of the buffer
+    // passed in via the Flash() call.
     ftruncate(fd, cur_pos + len);
     
     size_t ret = 0;
