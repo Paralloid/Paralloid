@@ -27,7 +27,7 @@
 #include <private/images.h>
 
 void ListImages(FastbootDevice *device, std::string base_path) {
-    auto images = scanImages(base_path);
+    auto images = BootableImage::scanImages(base_path);
     
     for (auto& img : images) {
         device->WriteInfo(android::base::StringPrintf("    %s", img.imageName().c_str()));

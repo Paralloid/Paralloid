@@ -18,6 +18,19 @@ private:
     fs::path base_path;
     std::string image_name;
 public:
+    static std::vector<BootableImage> scanImages(fs::path base_path) {
+        auto images = std::vector<BootableImage>();
+        // An "image" is defined as a directory under base_path that contains
+        // at least system.img (there could be extra images such as product.img)
+        for (auto& p: fs::directory_iterator(base_path)) {
+            if (!p.is_directory()) continue;
+            if (!fs::exists(p / fs::path("system.img"))) continue;
+            auto relative_path = fs::relative(p, base_path);
+            images.push_back(BootableImage(base_path, relative_path.string()));
+        }
+        return images;
+    }
+    
     BootableImage(fs::path base_path, std::string image_name)
       : base_path(base_path), image_name(image_name) {};
       
@@ -47,19 +60,6 @@ public:
     
     // TODO: support more images like system_ext
 };
-
-static std::vector<BootableImage> scanImages(fs::path base_path) {
-    auto images = std::vector<BootableImage>();
-    // An "image" is defined as a directory under base_path that contains
-    // at least system.img (there could be extra images such as product.img)
-    for (auto& p: fs::directory_iterator(base_path)) {
-        if (!p.is_directory()) continue;
-        if (!fs::exists(p / fs::path("system.img"))) continue;
-        auto relative_path = fs::relative(p, base_path);
-        images.push_back(BootableImage(base_path, relative_path.string()));
-    }
-    return images;
-}
 
 // A flashable target describes the full path to a partition in a BootableImage
 // In addition, it does not care about the actual path of the underlying

@@ -124,7 +124,7 @@ optional<string> ImageSelectionMenu::getExtraText() {
 void ImageSelectionMenu::populateItems() {
     items->push_back(MenuItem(ACTION_BACK, "..."));
     
-    images = scanImages(base_path);
+    images = BootableImage::scanImages(base_path);
     
     for (int i = 0; i < images.size(); i++) {
         items->push_back(MenuItem(ACTION_IMAGE_BASE + i, images.at(i).imageName()));
