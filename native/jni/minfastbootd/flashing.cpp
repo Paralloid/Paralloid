@@ -11,7 +11,7 @@
 
 constexpr uint32_t SPARSE_HEADER_MAGIC = 0xed26ff3a;
 
-int OpenPartitionImage(BootableImage img, const std::string& partition_name, int size) {
+int OpenPartitionImage(BootableImage img, const std::string& partition_name) {
     auto path = img.partitionImagePath(partition_name)->string();
     int fd = open(path.c_str(), O_CREAT | O_CLOEXEC | O_SYNC | O_RDWR, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP);
     
@@ -114,7 +114,7 @@ int Flash(FastbootDevice* device, const std::string& target) {
         return -EINVAL;
     }
     
-    int fd = OpenPartitionImage(img, *targetDesc->partition_name, data.size());
+    int fd = OpenPartitionImage(img, *targetDesc->partition_name);
     if (fd < 0) {
         return fd;
     }
