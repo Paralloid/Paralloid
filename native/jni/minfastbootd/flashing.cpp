@@ -6,24 +6,9 @@
 #include <sparse/sparse.h>
 
 #include <cstdlib>
-#include <iostream>
-#include <map>
-#include <sstream>
 #include <vector>
 
 constexpr uint32_t SPARSE_HEADER_MAGIC = 0xed26ff3a;
-
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> result;
-    std::stringstream ss(s);
-    std::string item;
-
-    while (getline(ss, item, delim)) {
-        result.push_back(item);
-    }
-
-    return result;
-}
 
 int OpenPartitionImage(BootableImage img, const std::string& partition_name, int size) {
     auto path = img.partitionImagePath(partition_name)->string();
@@ -90,34 +75,17 @@ int FlashFd(int fd, std::vector<char>& downloaded_data) {
 }
 
 int Flash(FastbootDevice* device, const std::string& target) {
-    // Parse the "target" string first
-    auto splitted = split(target, '_');
+    auto targetDesc = FlashableTargetDesc::parse(target);
     
-    // The format of `target` should be
-    // {sdcard,userdata}_<image_name>_<partition>
-    if (splitted.size() != 3) {
+    if (targetDesc == std::nullopt) {
         return -EINVAL;
     }
     
-    auto target_storage_device = splitted[0];
-    if (target_storage_device != "sdcard" && target_storage_device != "userdata") {
-        return -ENOENT;
-    }
-    if (target_storage_device == "sdcard" && !fs::exists("/dev/.sdcard_mounted")) {
-        return -ENOENT;
-    }
-    if (target_storage_device == "userdata" && !fs::exists("/dev/.userdata_mounted")) {
+    if (!targetDesc->storageDeviceMounted()) {
         return -ENOENT;
     }
     
-    auto image_name = splitted[1];
-    auto partition_name = splitted[2];
-    if (partition_name != "system" && partition_name != "product") {
-        return -ENOENT;
-    }
-    
-    auto base_path = fs::path(target_storage_device == "sdcard" ? EXT_SDCARD_BASE_PATH : USERDATA_BASE_PATH);
-    auto img = BootableImage(base_path, image_name);
+    auto img = targetDesc->toBootableImage();
     
     // Create the directory for the target image
     if (!fs::exists(img.imagePath()) && !fs::create_directories(img.imagePath())) {
@@ -130,7 +98,7 @@ int Flash(FastbootDevice* device, const std::string& target) {
         return -EINVAL;
     }
     
-    int fd = OpenPartitionImage(img, partition_name, data.size());
+    int fd = OpenPartitionImage(img, *targetDesc->partition_name, data.size());
     if (fd < 0) {
         return fd;
     }
@@ -139,7 +107,7 @@ int Flash(FastbootDevice* device, const std::string& target) {
     close(fd);
     
     if (res >= 0) {
-        device->WriteInfo("Written to " + img.partitionImagePath(partition_name)->string());
+        device->WriteInfo("Written to " + img.partitionImagePath(*targetDesc->partition_name)->string());
     }
     
     return res;
