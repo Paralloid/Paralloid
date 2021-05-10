@@ -13,6 +13,15 @@
 
 namespace fs = std::filesystem;
 
+// A BootableImage is a directory anywhere in the filesystem that
+//   1) Has at least a file named system.img inside
+//   2) May or may not have additional system partitions such as product.img
+// Note that it is the __directory__ that is considered a "BootableImage",
+// not individual partition images located inside that directory. This is due to
+// the fact that there may be multiple partition images to support one single
+// bootable system, for example, system.img + product.img
+// The `boot-target` script will automatically mount all supported partition images
+// in the directory, not just system.img.
 class BootableImage {
 private:
     fs::path base_path;
