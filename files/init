@@ -200,5 +200,5 @@ if [ $? -eq 0 ];then
     touch /dev/.userdata_mounted
 fi
 
-# Launch the boot-diverter UI
-exec /bin/diverter > /dev/kmsg 2>&1
+# Launch the Paralloid UI
+exec /bin/paralloid_ui > /dev/kmsg 2>&1

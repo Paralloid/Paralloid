@@ -25,16 +25,16 @@ LOCAL_SRC_FILES := \
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := diverter
+LOCAL_MODULE := paralloid_ui
 LOCAL_STATIC_LIBRARIES := minui liblog
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/include \
 
 LOCAL_SRC_FILES := \
-    diverter/main.cpp \
-    diverter/ui.cpp \
-    diverter/menu.cpp \
+    paralloid_ui/main.cpp \
+    paralloid_ui/ui.cpp \
+    paralloid_ui/menu.cpp \
     
 LOCAL_LDLIBS += -lz
     

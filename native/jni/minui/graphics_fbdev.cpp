@@ -58,7 +58,7 @@ void MinuiBackendFbdev::SetDisplayedFramebuffer(size_t n) {
 GRSurface* MinuiBackendFbdev::Init() {
   android::base::unique_fd fd(open("/dev/graphics/fb0", O_RDWR | O_CLOEXEC));
   
-#ifdef BOOT_DIVERTER
+#ifdef PARALLOID
   // mdev uses /dev/fb0 instead of /dev/graphics/fb0
   if (fd == -1) {
       fd = android::base::unique_fd(open("/dev/fb0", O_RDWR | O_CLOEXEC));

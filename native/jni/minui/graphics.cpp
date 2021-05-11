@@ -342,7 +342,7 @@ void gr_flip() {
 }
 
 int gr_init() {
-#ifndef BOOT_DIVERTER
+#ifndef PARALLOID
   // pixel_format needs to be set before loading any resources or initializing backends.
   std::string format = android::base::GetProperty("ro.minui.pixel_format", "");
   if (format == "ABGR_8888") {
@@ -385,7 +385,7 @@ int gr_init() {
 
   gr_backend = backend.release();
 
-#ifndef BOOT_DIVERTER
+#ifndef PARALLOID
   int overscan_percent = android::base::GetIntProperty("ro.minui.overscan_percent", 0);
 #else
   int overscan_percent = 0;
@@ -400,7 +400,7 @@ int gr_init() {
     return -1;
   }
 
-#ifndef BOOT_DIVERTER
+#ifndef PARALLOID
   std::string rotation_str =
       android::base::GetProperty("ro.minui.default_rotation", "ROTATION_NONE");
   if (rotation_str == "ROTATION_RIGHT") {

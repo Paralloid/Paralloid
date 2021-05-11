@@ -43,7 +43,7 @@ MainMenu::MainMenu() {
 }
 
 string MainMenu::getTitle() {
-    return "Boot Diverter";
+    return "Paralloid";
 }
 
 optional<string> MainMenu::getExtraText() {

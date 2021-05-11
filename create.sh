@@ -46,8 +46,6 @@ cp files/format-userdata-image rootfs/bin/format-userdata-image
 chmod 0755 rootfs/bin/boot-target
 chmod 0755 rootfs/bin/format-userdata-image
 
-cp files/diverter_tools rootfs/bin/diverter_tools
-chmod 0755 rootfs/bin/diverter_tools
 cp files/dmctl rootfs/bin/dmctl
 chmod 0755 rootfs/bin/dmctl
 cp files/e2fsdroid rootfs/bin/e2fsdroid
@@ -55,9 +53,9 @@ chmod 0755 rootfs/bin/e2fsdroid
 cp files/mke2fs rootfs/bin/mke2fs
 chmod 0755 rootfs/bin/mke2fs
 
-cp native/libs/armeabi-v7a/diverter rootfs/bin/diverter
+cp native/libs/armeabi-v7a/paralloid_ui rootfs/bin/paralloid_ui
 cp native/libs/armeabi-v7a/minfastbootd rootfs/bin/minfastbootd
-chmod 0755 rootfs/bin/diverter
+chmod 0755 rootfs/bin/paralloid_ui
 chmod 0755 rootfs/bin/minfastbootd
 
 mkdir -p rootfs/res/images

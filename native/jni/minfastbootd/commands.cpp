@@ -56,7 +56,7 @@ bool ListImagesHandler(FastbootDevice* device, const std::vector<std::string>& a
 
 bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args) {
     if (args[0] == "oem hello") {
-        device->WriteInfo("Hello! I am minfastbootd from boot-diverter");
+        device->WriteInfo("Hello! I am minfastbootd from Paralloid");
         return device->WriteStatus(FastbootResult::OKAY, "");
     } else if (args[0] == "oem list-images") {
         return ListImagesHandler(device, args);
