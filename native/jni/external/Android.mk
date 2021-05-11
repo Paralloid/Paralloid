@@ -103,6 +103,27 @@ LOCAL_SRC_FILES := \
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := libcutils
+LOCAL_STATIC_LIBRARIES := liblog libbase
+
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/android_system_core/libcutils/include \
+    
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
+
+LOCAL_SRC_FILES := \
+    android_system_core/libcutils/config_utils.cpp \
+    android_system_core/libcutils/canned_fs_config.cpp \
+    android_system_core/libcutils/fs_config.cpp \
+    android_system_core/libcutils/load_file.cpp \
+    android_system_core/libcutils/native_handle.cpp \
+    android_system_core/libcutils/record_stream.cpp \
+    android_system_core/libcutils/strlcpy.c \
+    android_system_core/libcutils/threads.cpp \
+
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := libdrm
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/libdrm/include/drm \
@@ -136,4 +157,5 @@ LOCAL_EXPORT_C_INCLUDES := \
     
 include $(BUILD_STATIC_LIBRARY)
 
+include $(LOCAL_PATH)/selinux.mk
 include $(LOCAL_PATH)/e2fsprogs.mk

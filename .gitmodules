@@ -17,3 +17,11 @@
 	path = native/jni/external/e2fsprogs
 	url = https://android.googlesource.com/platform/external/e2fsprogs
 	branch = android11-qpr2-release
+[submodule "native/jni/external/pcre"]
+	path = native/jni/external/pcre
+	url = https://android.googlesource.com/platform/external/pcre
+	branch = android11-qpr2-release
+[submodule "native/jni/external/selinux"]
+	path = native/jni/external/selinux
+	url = https://android.googlesource.com/platform/external/selinux
+	branch = android11-qpr2-release

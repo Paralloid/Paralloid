@@ -267,3 +267,33 @@ LOCAL_SRC_FILES := \
 LOCAL_LDLIBS := -ldl -lz
     
 include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := e2fsdroid
+LOCAL_STATIC_LIBRARIES := \
+    libext2_com_err \
+    libext2_misc \
+    libext2fs \
+    libbase \
+    libselinux \
+    libcutils \
+    
+LOCAL_SRC_FILES := \
+    e2fsprogs/contrib/android/e2fsdroid.c \
+    e2fsprogs/contrib/android/block_range.c \
+    e2fsprogs/contrib/android/fsmap.c \
+    e2fsprogs/contrib/android/block_list.c \
+    e2fsprogs/contrib/android/base_fs.c \
+    e2fsprogs/contrib/android/perms.c \
+    e2fsprogs/contrib/android/basefs_allocator.c \
+    
+# We have to undefine the __ANDROID__ macro here to avoid
+# calling into android-specific libselinux functions, which
+# require the full Android filesystem hierarchy (i.e. the
+# sepolicy files)
+# This does not affect the functionalities we want to use
+LOCAL_CFLAGS := -D_GNU_SOURCE -U__ANDROID__
+    
+LOCAL_LDLIBS := -ldl -lz
+    
+include $(BUILD_EXECUTABLE)

@@ -52,7 +52,7 @@ cp files/format-userdata-image rootfs/bin/format-userdata-image
 chmod 0755 rootfs/bin/boot-target
 chmod 0755 rootfs/bin/format-userdata-image
 
-cp files/e2fsdroid rootfs/bin/e2fsdroid
+cp native/libs/armeabi-v7a/e2fsdroid rootfs/bin/e2fsdroid
 chmod 0755 rootfs/bin/e2fsdroid
 cp native/libs/armeabi-v7a/mke2fs rootfs/bin/mke2fs
 chmod 0755 rootfs/bin/mke2fs
