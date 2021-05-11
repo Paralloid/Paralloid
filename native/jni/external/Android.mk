@@ -157,5 +157,7 @@ LOCAL_EXPORT_C_INCLUDES := \
     
 include $(BUILD_STATIC_LIBRARY)
 
-include $(LOCAL_PATH)/selinux.mk
-include $(LOCAL_PATH)/e2fsprogs.mk
+# LOCAL_PATH can be overridden from included makefiles
+_LOCAL_PATH := $(LOCAL_PATH)
+include $(_LOCAL_PATH)/selinux_build/Android.mk
+include $(_LOCAL_PATH)/e2fsprogs_build/Android.mk
