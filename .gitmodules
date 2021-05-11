@@ -13,3 +13,7 @@
 [submodule "busybox/android-busybox-ndk"]
 	path = busybox/android-busybox-ndk
 	url = https://github.com/osm0sis/android-busybox-ndk
+[submodule "native/jni/external/e2fsprogs"]
+	path = native/jni/external/e2fsprogs
+	url = https://android.googlesource.com/platform/external/e2fsprogs
+	branch = android11-qpr2-release
