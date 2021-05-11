@@ -52,8 +52,6 @@ cp files/format-userdata-image rootfs/bin/format-userdata-image
 chmod 0755 rootfs/bin/boot-target
 chmod 0755 rootfs/bin/format-userdata-image
 
-cp files/dmctl rootfs/bin/dmctl
-chmod 0755 rootfs/bin/dmctl
 cp files/e2fsdroid rootfs/bin/e2fsdroid
 chmod 0755 rootfs/bin/e2fsdroid
 cp files/mke2fs rootfs/bin/mke2fs
