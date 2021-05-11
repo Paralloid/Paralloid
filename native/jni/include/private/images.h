@@ -7,7 +7,7 @@
 
 #include <private/utils.h>
 
-#define INTERNAL_SYSTEM_PATH "/dev/block/mapper/system_phh"
+#define INTERNAL_SYSTEM_PATH "/dev/block/mapper/system_orig"
 #define EXT_SDCARD_BASE_PATH "/dev/mntSD/Paralloid"
 #define USERDATA_BASE_PATH   "/dev/mntDATA/unencrypted/Paralloid"
 

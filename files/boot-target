@@ -4,7 +4,7 @@ TARGET=$1
 TARGET_DIR=$(dirname $TARGET)
 
 if [ $TARGET == "internal" ];then
-    mount -o ro /dev/block/mapper/system_phh /target
+    mount -o ro /dev/block/mapper/system_orig /target
 else
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
