@@ -192,9 +192,20 @@ fi
 
 # Mount userdata too (without decryption)
 mkdir /dev/mntDATA
-mount -o rw /dev/block/by-name/userdata /dev/mntDATA
-if [ $? -eq 0 ];then
+mount -o ro /dev/block/by-name/userdata /dev/mntDATA
+# Only ever mount data as R/W when the system has already written
+# to the data partition. Otherwise, the internal system partition
+# will fail to boot.
+# TODO: What if the user does not want to use the internal system
+# partition anymore? For example, on devices without dynamic partitions.
+# We should allow the user to write custom images to userdata anyway.
+if [ -d /dev/mntDATA/unencrypted ];then
+    mount -o remount,rw /dev/mntDATA
     touch /dev/.userdata_mounted
+else
+    # The internal system partition can only initialize encrypted userdata
+    # when it is not mounted.
+    umount /dev/mntDATA
 fi
 
 # Launch the Paralloid UI
