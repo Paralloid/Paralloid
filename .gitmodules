@@ -10,3 +10,6 @@
 	path = native/jni/external/libpng
 	url = https://android.googlesource.com/platform/external/libpng
 	branch = android11-platform-release
+[submodule "busybox/android-busybox-ndk"]
+	path = busybox/android-busybox-ndk
+	url = https://github.com/osm0sis/android-busybox-ndk

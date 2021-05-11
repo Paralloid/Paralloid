@@ -2,3 +2,4 @@
 /rootfs.img
 /native/libs
 /native/obj
+/busybox/build

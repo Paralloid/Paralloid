@@ -6,7 +6,12 @@ export PATH=/bin:/sbin
 
 mount -o move /dev /target_tmp/dev
 mount -o move /proc /target_tmp/proc
-mount -o move /sys /target_tmp/sys
+# Note: we cannot move /sys to /target_tmp/sys, because
+# bionic libc wants at least one of /dev/null and /sys/fs/selinux/null
+# otherwise it segfaults. Moving /sys here will cause all the following
+# commands to break. Using recursive bind mount copies the mount tree,
+# preserving the original one, which should make it safe.
+mount --rbind /sys /target_tmp/sys
 mount -o move /mnt /target_tmp/mnt
 mount -o move /debug_ramdisk /target_tmp/debug_ramdisk
 mount -o move /metadata /target_tmp/metadata
@@ -17,8 +22,9 @@ mount -o move /prism /target_tmp/prism
 mount -o move /optics /target_tmp/optics
 #TODO: Other mount points for non-GSI (system_ext? product?) + Device-specific (prism,optics)
 
+# Re-mount some of the filesystems we just moved
+# We don't need to mount /sys because we used --rbind
 mount -t proc none /proc
-mount -t sysfs none /sys
 mount -t configfs none /config
 mount -t tmpfs none /dev
 mount -t tmpfs none /tmp

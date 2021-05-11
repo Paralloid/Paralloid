@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Ensure busybox exists first
+if [ ! -f busybox/build/busybox ];then
+    echo "Please build busybox first by running busybox/build.sh"
+    exit 1
+fi
+
 # Run NDK build first
 pushd native
 ndk-build -j || exit 1
@@ -10,7 +16,7 @@ rm -Rf rootfs rootfs.img
 mkdir -p rootfs/{apex,sbin,bin,config,proc,sys,dev,system/bin,vendor,product,odm,mnt,first_stage_ramdisk,tmp,metadata,bt_firmware,efs,firmware,oem,persist,postinstall,system_ext,sec_storage,dev/pts,dev/socket,sys/fs/selinux,mnt/vendor,mnt/product,debug_ramdisk,system/system_ext/etc/init/config,system/etc/init/config/,prism,optics}
 mkdir -p rootfs/target/ rootfs/target_tmp/{dev,proc,sys,mnt,debug_ramdisk,metadata,vendor,odm,prism,optics,apex}
 
-cp files/busybox-armv7l rootfs/bin/busybox
+cp busybox/build/busybox rootfs/bin/busybox
 chmod 0755 rootfs/bin/busybox
 
 echo /oem > rootfs/system/system_ext/etc/init/config/skip_mount.cfg
