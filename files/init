@@ -32,27 +32,24 @@ echo > $gadget/UDC
 rm -Rf $gadget/configs
 rm -Rf $gadget/configs
 mkdir $gadget
-echo 0x12d1 > $gadget/idVendor
-echo 0x103A > $gadget/idProduct
-#echo 0x18d1 > $gadget/idVendor
-#echo 0x4ee0 > $gadget/idProduct
-echo 12D1 > /sys/class/android_usb/android0/idVendor
-echo 103A > /sys/class/android_usb/android0/idProduct
-#echo 18D1 > /sys/class/android_usb/android0/idVendor
-#echo 4EE0 > /sys/class/android_usb/android0/idProduct
-echo phh > /sys/class/android_usb/android0/iManufacturer
-echo phh > /sys/class/android_usb/android0/iProduct
+# Use Android's default bootloader device ID
+echo 0x18d1 > $gadget/idVendor
+echo 0x4ee0 > $gadget/idProduct
+echo 18D1 > /sys/class/android_usb/android0/idVendor
+echo 4EE0 > /sys/class/android_usb/android0/idProduct
+echo Paralloid > /sys/class/android_usb/android0/iManufacturer
+echo Paralloid > /sys/class/android_usb/android0/iProduct
 # Some MTK devices won't change serialnumber once it has been set
 # so set it to the correct value from the very beginning (if we can)
 serialnumber=$(cat /proc/cmdline | grep -o "androidboot.serialno=[a-zA-Z0-9]*" | cut -c 22-)
 if [ -z "$serialnumber" ];then
-    serialnumber=phh
+    serialnumber=paralloid
 fi
 echo "$serialnumber" > /sys/class/android_usb/android0/iSerial
 mkdir -p $gadget/strings/0x409
 echo "$serialnumber" > $gadget/strings/0x409/serialnumber
-echo phh > $gadget/strings/0x409/manufacturer
-echo phh > $gadget/strings/0x409/product
+echo Paralloid > $gadget/strings/0x409/manufacturer
+echo Paralloid > $gadget/strings/0x409/product
 
 # Configure the gadget with all the functions
 mkdir $gadget/configs/c.1/
