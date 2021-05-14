@@ -34,6 +34,8 @@ using CommandHandler = std::function<bool(FastbootDevice*, const std::vector<std
 
 bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args);
 bool RebootHandler(FastbootDevice* device, const std::vector<std::string>& args);
+bool RebootRecoveryHandler(FastbootDevice* device, const std::vector<std::string>& args);
+bool RebootBootloaderHandler(FastbootDevice* device, const std::vector<std::string>& args);
 bool GetVarHandler(FastbootDevice* device, const std::vector<std::string>& args);
 bool DownloadHandler(FastbootDevice* device, const std::vector<std::string>& args);
 bool FlashHandler(FastbootDevice* device, const std::vector<std::string>& args);

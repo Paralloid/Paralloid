@@ -30,6 +30,8 @@ FastbootDevice::FastbootDevice()
     : kCommandMap({
         {FB_CMD_OEM, OemCmdHandler},
         {FB_CMD_REBOOT, RebootHandler},
+        {FB_CMD_REBOOT_RECOVERY, RebootRecoveryHandler},
+        {FB_CMD_REBOOT_BOOTLOADER, RebootBootloaderHandler},
         {FB_CMD_GETVAR, GetVarHandler},
         {FB_CMD_DOWNLOAD, DownloadHandler},
         {FB_CMD_FLASH, FlashHandler},
