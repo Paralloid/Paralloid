@@ -67,6 +67,7 @@ bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args)
 
 bool RebootHandler(FastbootDevice* device, const std::vector<std::string>& args) {
     device->WriteStatus(FastbootResult::OKAY, "Rebooting");
+    sync();
     reboot(RB_AUTOBOOT);
     return true;
 }
