@@ -100,7 +100,7 @@ if [ $TARGET != "internal" ];then
     for fstab in $(cd /target/vendor/etc/; echo fstab*);do
         cp /target/vendor/etc/$fstab /dev/override/fstabs/$fstab
         sed -i /sdcard/d /dev/override/fstabs/$fstab
-        sed -i -E -e 's;([^ ]*)(.*/data\b.*);/dev/block/sd_userdata \2;g' /dev/override/fstabs/$fstab
+        sed -i -E -e 's;([^ ]*)(.*/data[[:>:]].*);/dev/block/sd_userdata \2;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;f2fs;ext4;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;fsync_mode=nobarrier,reserve_root=32768,;;g' /dev/override/fstabs/$fstab
         sed -i '/product/d' /dev/override/fstabs/$fstab
