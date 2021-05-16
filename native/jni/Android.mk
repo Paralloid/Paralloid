@@ -25,11 +25,22 @@ LOCAL_SRC_FILES := \
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := paralloid_ui
-LOCAL_STATIC_LIBRARIES := minui liblog
+LOCAL_MODULE := libparalloid
 
 LOCAL_C_INCLUDES := \
-    $(LOCAL_PATH)/include \
+    $(LOCAL_PATH)/libparalloid/include \
+    
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
+
+LOCAL_SRC_FILES := \
+    libparalloid/images.cpp \
+    libparalloid/utils.cpp \
+    
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := paralloid_ui
+LOCAL_STATIC_LIBRARIES := minui liblog libparalloid
 
 LOCAL_SRC_FILES := \
     paralloid_ui/main.cpp \
@@ -42,10 +53,7 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := minfastbootd
-LOCAL_STATIC_LIBRARIES := libbase libsparse
-
-LOCAL_C_INCLUDES := \
-    $(LOCAL_PATH)/include \
+LOCAL_STATIC_LIBRARIES := libbase libsparse libparalloid
 
 LOCAL_SRC_FILES := \
     minfastbootd/main.cpp \

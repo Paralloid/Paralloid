@@ -23,8 +23,8 @@
 #include <android-base/parseint.h>
 #include <android-base/stringprintf.h>
 
-#include <private/images.h>
-#include <private/utils.h>
+#include <paralloid/images.h>
+#include <paralloid/utils.h>
 
 void ListImages(FastbootDevice *device, std::string base_path) {
     auto images = BootableImage::scanImages(base_path);
