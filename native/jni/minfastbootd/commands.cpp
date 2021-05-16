@@ -22,6 +22,7 @@
 
 #include <android-base/parseint.h>
 #include <android-base/stringprintf.h>
+#include <sys/syscall.h>
 #include <sys/reboot.h>
 
 #include <private/images.h>
@@ -67,7 +68,25 @@ bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args)
 
 bool RebootHandler(FastbootDevice* device, const std::vector<std::string>& args) {
     device->WriteStatus(FastbootResult::OKAY, "Rebooting");
+    sync();
     reboot(RB_AUTOBOOT);
+    return true;
+}
+
+static void rebootInto(FastbootDevice* device, const char* target) {
+    device->WriteStatus(FastbootResult::OKAY, "Rebooting into recovery");
+    sync();
+    syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
+            LINUX_REBOOT_CMD_RESTART2, target);
+}
+
+bool RebootRecoveryHandler(FastbootDevice* device, const std::vector<std::string>& args) {
+    rebootInto(device, "recovery");
+    return true;
+}
+
+bool RebootBootloaderHandler(FastbootDevice* device, const std::vector<std::string>& args) {
+    rebootInto(device, "bootloader");
     return true;
 }
 
