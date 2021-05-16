@@ -5,9 +5,10 @@
 #include <sparse/sparse.h>
 
 #include <cstdlib>
+#include <iostream>
 #include <vector>
 
-#include <private/images.h>
+#include <paralloid/images.h>
 
 constexpr uint32_t SPARSE_HEADER_MAGIC = 0xed26ff3a;
 

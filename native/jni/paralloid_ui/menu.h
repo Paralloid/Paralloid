@@ -1,6 +1,6 @@
 #pragma once
 #include "ui.h"
-#include <private/images.h>
+#include <paralloid/images.h>
 
 #include <chrono>
 #include <filesystem>

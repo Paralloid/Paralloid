@@ -2,7 +2,7 @@
 #include "main.h"
 #include <sstream>
 
-#include <private/utils.h>
+#include <paralloid/utils.h>
 #include <sys/reboot.h>
 
 #define DEFAULT_HELP_TEXT \
