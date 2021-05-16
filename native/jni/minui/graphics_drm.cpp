@@ -128,7 +128,7 @@ std::unique_ptr<GRSurfaceDrm> GRSurfaceDrm::Create(int drm_fd, int width, int he
     return nullptr;
   }
 
-  auto mmapped = mmap(nullptr, surface->height * surface->row_bytes, PROT_READ | PROT_WRITE,
+  auto mmapped = mmap64(nullptr, surface->height * surface->row_bytes, PROT_READ | PROT_WRITE,
                       MAP_SHARED, drm_fd, map_dumb.offset);
   if (mmapped == MAP_FAILED) {
     perror("Failed to mmap()");
