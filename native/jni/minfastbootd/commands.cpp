@@ -22,10 +22,9 @@
 
 #include <android-base/parseint.h>
 #include <android-base/stringprintf.h>
-#include <sys/syscall.h>
-#include <sys/reboot.h>
 
 #include <private/images.h>
+#include <private/utils.h>
 
 void ListImages(FastbootDevice *device, std::string base_path) {
     auto images = BootableImage::scanImages(base_path);
@@ -68,25 +67,19 @@ bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args)
 
 bool RebootHandler(FastbootDevice* device, const std::vector<std::string>& args) {
     device->WriteStatus(FastbootResult::OKAY, "Rebooting");
-    sync();
-    reboot(RB_AUTOBOOT);
+    rebootInto(nullptr);
     return true;
 }
 
-static void rebootInto(FastbootDevice* device, const char* target) {
-    device->WriteStatus(FastbootResult::OKAY, "Rebooting into recovery");
-    sync();
-    syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
-            LINUX_REBOOT_CMD_RESTART2, target);
-}
-
 bool RebootRecoveryHandler(FastbootDevice* device, const std::vector<std::string>& args) {
-    rebootInto(device, "recovery");
+    device->WriteStatus(FastbootResult::OKAY, "Rebooting into recovery");
+    rebootInto("recovery");
     return true;
 }
 
 bool RebootBootloaderHandler(FastbootDevice* device, const std::vector<std::string>& args) {
-    rebootInto(device, "bootloader");
+    device->WriteStatus(FastbootResult::OKAY, "Rebooting into bootloader");
+    rebootInto("bootloader");
     return true;
 }
 

@@ -25,6 +25,8 @@ public:
 #define ACTION_BOOT_SDCARD   1002
 #define ACTION_BOOT_USERDATA 1003
 #define ACTION_REBOOT        1100
+#define ACTION_REBOOT_REC    1101
+#define ACTION_REBOOT_BL     1102
 
 #define MAIN_MENU_TIMEOUT    10
 class MainMenu : public CachedMenu {

@@ -1,6 +1,8 @@
 #include "menu.h"
 #include "main.h"
 #include <sstream>
+
+#include <private/utils.h>
 #include <sys/reboot.h>
 
 #define DEFAULT_HELP_TEXT \
@@ -70,6 +72,8 @@ void MainMenu::populateItems() {
     }
     
     items->push_back(MenuItem(ACTION_REBOOT, "Reboot"));
+    items->push_back(MenuItem(ACTION_REBOOT_REC, "Reboot to recovery"));
+    items->push_back(MenuItem(ACTION_REBOOT_BL, "Reboot to bootloader"));
 }
 
 void MainMenu::onActiveItemChanged(int idx, int action) {
@@ -103,7 +107,11 @@ void MainMenu::onItemSelected(int action) {
         switchMenu(make_shared<ImageSelectionMenu>("Choose image from userdata",
             USERDATA_BASE_PATH));
     } else if (action == ACTION_REBOOT) {
-        reboot(RB_AUTOBOOT);
+        rebootInto(nullptr);
+    } else if (action == ACTION_REBOOT_REC) {
+        rebootInto("recovery");
+    } else if (action == ACTION_REBOOT_BL) {
+        rebootInto("bootloader");
     }
 }
 
