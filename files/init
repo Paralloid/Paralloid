@@ -30,7 +30,9 @@ mount -t tmpfs none /dev
 mount -t tmpfs none /tmp
 mount -t pstore none /sys/fs/pstore
 
+# Initial fill-up of /dev devices
 mdev -s
+# Daemon mdev to keep filling /dev with new devices
 mdev -d
 
 gadget=/config/usb_gadget/g1
@@ -136,6 +138,8 @@ ifconfig usb0 192.168.2.3 up
 ifconfig rndis0 192.168.2.3 up
 ifconfig $(cat $gadget/functions/ncm.0/ifname) 192.168.2.3 up
 
+# We expose a mass_storage USB gadget. We want it to contain /sys/fs/pstore + current kernel log
+# And update it every 2 seconds, so we can keep track of what happens on-device
 (
 set +x
 while ! [ -f /dev/booting ];do
@@ -146,6 +150,7 @@ echo /tmp/tmp-img > $gadget/functions/mass_storage.0/lun.0/file
 sleep 2
 done) &
 
+# We expose a shell over a virtual serial port USB gadget
 (
 while ! [ -f /dev/booting ];do
     sh <> /dev/ttyGS0 >&0 2>&1
@@ -161,6 +166,8 @@ refreshMapper() {
     done
 }
 
+# First stage init mapped all logical partitions from super onto dm devices
+# We want to expose those dm into /dev/block/mapper based on their names
 refreshMapper
 
 PARTNAME=""
@@ -177,8 +184,14 @@ for i in $(cd /sys/dev/block; echo *);do
     DEVNAME=""
 done
 
+# Detect sdcard, by assuming it is an mmc, on a differenc mmc controller than internal storage
+# This detection of hostController only works for eMMC, not UFS
+# But so far sdcards are only MMC, so we don't need to detect conflicting UFS controller (yet)
 hostController="$(readlink /dev/block/by-name/super |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
 sdcard=""
+# TODO: We are waiting 15s on devices with potentially no sdcard slot at all, that's sad
+#  15s is a realistic time for mmc bringup, so we can't have it lower
+#  However we should be able to scan /sys/class/mmc to detect if there is a free MMC controller
 for k in $(seq 1 15);do
     for i in $(find /dev -name 'mmcblk*p1');do
         if echo "$i" |grep -v -q "$hostController";then

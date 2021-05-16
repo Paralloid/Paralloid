@@ -5,6 +5,8 @@ TARGET_DIR=$(dirname $TARGET)
 
 if [ $TARGET == "internal" ];then
     mount -o ro /dev/block/mapper/system_orig /target
+    #TODO: Check /target/{system/,}system_ext/etc/init/config/skip_mount.cfg
+    # To determine whether to mount also oem, product, or system_ext partition
 else
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
@@ -85,6 +87,8 @@ if [ $TARGET != "internal" ];then
     mkdir -p /dev/override/selinux
     cp /target/system/etc/selinux/plat_sepolicy.cil /dev/override/selinux/
     # Allow kernel to read / write unlabeled files for our loop mount to work
+    # User's ext4 sdcard has no selinux policy, hence files there are unlabeled
+    # TODO: Handle other FS? (FAT16/EXFAT would be of class sdcard_type)
     echo "(allow kernel unlabeled (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
     # Allow kernel to read / write unencrypted_data_file for booting from /data/unencrypted/
     echo "(allow kernel unencrypted_data_file (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
@@ -101,14 +105,17 @@ if [ $TARGET != "internal" ];then
         cp /target/vendor/etc/$fstab /dev/override/fstabs/$fstab
         sed -i /sdcard/d /dev/override/fstabs/$fstab
         sed -i -E -e 's;([^ ]*)(.*/data\b.*);/dev/block/sd_userdata \2;g' /dev/override/fstabs/$fstab
+        # For the moment we only support creating ext4 userdata.img, so if vendor uses f2fs
+        # We need to change that to ext4 (and edit some parameters in the process)
         sed -i -E -e '/sd_userdata/s;f2fs;ext4;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;fsync_mode=nobarrier,reserve_root=32768,;;g' /dev/override/fstabs/$fstab
+        # Android's second stage init will mount /dev/mapper/product to /product if it isn't already mounted
         sed -i '/product/d' /dev/override/fstabs/$fstab
     done
 
     # Label the overridden files with the correct SELinux contexts using an in-memory fs
     # /dev/ram0 may not be enough for sepolicy on some devices; it cannot always be grown,
-    # so just create our own ramdisk image
+    # so just create our own ramdisk image in tmpfs
     dd if=/dev/zero of=/dev/ramdisk.img bs=1k count=20480
     mke2fs /dev/ramdisk.img
     # Default context for everything in the ramdisk (including directories)
@@ -138,6 +145,8 @@ fi
 #mount -o bind /dev/cmdline /target/proc/cmdline
 
 # Disable /dev/kmsg rate limiting
+# Otherwise some logs from Android second stage init will be mangled up, even from pstore
+# NB: This may reduce performance if device's console outputs on a hardware serial port
 echo on > /proc/sys/kernel/printk_devkmsg
 
 touch /dev/booting
@@ -172,8 +181,6 @@ echo HEHE > /dev/kmsg
 
 unset PATH
 exec /debug_ramdisk/bin/busybox chroot . /system/bin/init selinux_setup > /dev/kmsg
-
-#telnetd -F
 
 sleep 30
 reboot
