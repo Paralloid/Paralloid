@@ -222,4 +222,4 @@ while [ ! -f /dev/.paralloid_boot_target ];do
     sleep 1
 done
 
-exec /bin/boot-target "$(cat /dev/.paralloid_boot_target)" > /dev/kmsg 2>&1
+exec /bin/boot-target > /dev/kmsg 2>&1

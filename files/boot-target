@@ -1,6 +1,10 @@
 #!/bin/sh
 
-TARGET=$1
+if [ ! -f /dev/.paralloid_boot_target ];then
+    exit 1
+fi
+
+TARGET="$(cat /dev/.paralloid_boot_target)"
 TARGET_DIR=$(dirname $TARGET)
 
 if [ $TARGET == "internal" ];then
