@@ -256,7 +256,7 @@ else
 fi
 
 # Handle force_debuggable / adb_debug.prop
-if [ "$DIVERTER_FORCE_DEBUGGABLE" == "1" ];then
+if [ -f /dev/.paralloid_force_debuggable ];then
     # Without this, `init` on Q does not read /debug_ramdisk/adb_debug.prop
     export INIT_FORCE_DEBUGGABLE=true
 else

@@ -201,7 +201,7 @@ void ExtraOptionsMenu::onItemSelected(int action) {
         switchMenu(last_menu);
     } else if (action == ACTION_ADB_DEBUGGABLE) {
         // This will be read from the boot-target script
-        setenv("DIVERTER_FORCE_DEBUGGABLE", "1", 1);
+        createMarkerFile("/dev/.paralloid_force_debuggable");
         boot_target_with_confirmation(target, shared_from_this());
     } else if (action == ACTION_DELETE_DATA) {
         switchMenu(make_shared<DeleteDataConfirmationMenu>(last_menu, fs::path(target)));
