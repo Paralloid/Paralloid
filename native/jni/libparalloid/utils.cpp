@@ -1,5 +1,6 @@
 #include <paralloid/utils.h>
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -28,4 +29,14 @@ void rebootInto(const char* target) {
         syscall(__NR_reboot, LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
                 LINUX_REBOOT_CMD_RESTART2, target);
     }
+}
+
+void createMarkerFile(std::string file, std::optional<std::string> content) {
+    // To ensure atomicity, we first create a temporary file, then rename it after writing
+    std::ofstream ofs(file + ".tmp");
+    if (content != std::nullopt) {
+        ofs << *content;
+    }
+    ofs.close();
+    rename((file + ".tmp").c_str(), file.c_str());
 }

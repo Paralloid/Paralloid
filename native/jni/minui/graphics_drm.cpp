@@ -289,7 +289,12 @@ GRSurface* MinuiBackendDrm::Init() {
   /* Consider DRM devices in order. */
   for (int i = 0; i < DRM_MAX_MINOR; i++) {
     auto dev_name = android::base::StringPrintf(DRM_DEV_NAME, DRM_DIR_NAME, i);
+#ifndef PARALLOID
     android::base::unique_fd fd(open(dev_name.c_str(), O_RDWR | O_CLOEXEC));
+#else
+    // Do not set O_CLOEXEC because we need to hold the DRM fd (see the destructor for details)
+    android::base::unique_fd fd(open(dev_name.c_str(), O_RDWR));
+#endif
     if (fd == -1) continue;
 
     /* We need dumb buffers. */
@@ -404,9 +409,19 @@ GRSurface* MinuiBackendDrm::Flip() {
 }
 
 MinuiBackendDrm::~MinuiBackendDrm() {
+#ifndef PARALLOID
   DrmDisableCrtc(drm_fd, main_monitor_crtc);
   drmModeFreeCrtc(main_monitor_crtc);
   drmModeFreeConnector(main_monitor_connector);
   close(drm_fd);
+#else
+  // Do not close the drm fd just yet, because on some devices
+  // (e.g. Motorola msm-5.4) closing the drm fd would also reset
+  // the touchscreen, which resets some volatile state in the
+  // controller's SRAM. Instead, we need to just drop
+  // our master status and wait. The waiting is expected
+  // to be done by whichever process that uses minui.
+  drmDropMaster(drm_fd);
+#endif
   drm_fd = -1;
 }

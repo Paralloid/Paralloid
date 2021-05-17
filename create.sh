@@ -47,9 +47,7 @@ cp files/init rootfs/system/bin/init
 chmod 0755 rootfs/init
 chmod 0755 rootfs/system/bin/init
 
-cp files/boot-target rootfs/bin/boot-target
 cp files/format-userdata-image rootfs/bin/format-userdata-image
-chmod 0755 rootfs/bin/boot-target
 chmod 0755 rootfs/bin/format-userdata-image
 
 cp native/libs/armeabi-v7a/e2fsdroid rootfs/bin/e2fsdroid
