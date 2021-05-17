@@ -23,9 +23,7 @@ void boot_target(string target) {
     UI::exit("Booting target " + target + "...");
     // Notify the init process to proceed with booting
     // by writing the target to a marker file
-    ofstream ofs("/dev/.paralloid_boot_target");
-    ofs << target;
-    ofs.close();
+    createMarkerFile("/dev/.paralloid_boot_target", target);
     // Wait a while before exiting the process
     // The purpose is to hold the DRM device node fd for a while, because
     // closing the fd will prevent the touchscreen from initializing on

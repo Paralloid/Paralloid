@@ -25,7 +25,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <fstream>
+#include <paralloid/utils.h>
+
 #include <iostream>
 
 constexpr int kMaxPacketSizeFs = 64;
@@ -192,10 +193,6 @@ static void CloseFunctionFs(usb_handle* h) {
     h->control.reset();
 }
 
-static void CreateFfsReadyMarker() {
-    std::ofstream ffs_ready("/dev/.ffs_ready");
-}
-
 static bool InitFunctionFs(usb_handle* h) {
     std::cout << "initializing functionfs" << std::endl;
 
@@ -235,7 +232,7 @@ static bool InitFunctionFs(usb_handle* h) {
     h->reads_zero_packets = false;
     std::cout << "functionfs initialized" << std::endl;
     // Notify the init script about FFS being ready
-    CreateFfsReadyMarker();
+    createMarkerFile("/dev/.ffs_ready");
     return true;
 
 err:
