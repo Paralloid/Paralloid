@@ -57,6 +57,8 @@ mount -t tmpfs none /dev
 mount -t tmpfs none /tmp
 mount -t pstore none /sys/fs/pstore
 
+echo /bin/hotplug > /proc/sys/kernel/hotplug
+
 mdev -s
 mdev -d
 
