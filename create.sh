@@ -63,6 +63,9 @@ cp files/init rootfs/system/bin/init
 chmod 0755 rootfs/init
 chmod 0755 rootfs/system/bin/init
 
+cp files/hotplug rootfs/bin/hotplug
+chmod 0755 rootfs/bin/hotplug
+
 cp files/format-userdata-image rootfs/bin/format-userdata-image
 chmod 0755 rootfs/bin/format-userdata-image
 

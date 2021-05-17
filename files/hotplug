@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if [ "$SUBSYSTEM" = firmware ];then
+    found=false
+    for p in /target_tmp/vendor /vendor /target/vendor;do
+        if [ -f $p/firmware/$FIRMWARE ];then
+            echo 1 > /sys/class/firmware/$FIRMWARE/loading
+            cat $p/firmware/$FIRMWARE > /sys/class/firmware/$FIRMWARE/data
+            echo 0 > /sys/class/firmware/$FIRMWARE/loading
+            found=true
+        fi
+    done
+    if ! $found;then
+            echo 0 > /sys/class/firmware/$FIRMWARE/loading
+    fi
+fi
