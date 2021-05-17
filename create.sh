@@ -1,9 +1,25 @@
 #!/bin/bash
 
+if ! which ndk-build >/dev/null 2>&1;then
+    export PATH=$PATH:$PWD/NDK/ndk
+    export ANDROID_NDK=$PWD/NDK/ndk
+    if [ ! -d NDK ];then
+        mkdir -p NDK
+        (
+            cd NDK
+            wget https://dl.google.com/android/repository/android-ndk-r22b-linux-x86_64.zip
+            unzip android-ndk-r22b-linux-x86_64.zip
+            ln -s android-ndk-r22b ndk
+        )
+
+    fi
+fi
 # Ensure busybox exists first
 if [ ! -f busybox/build/busybox ];then
-    echo "Please build busybox first by running busybox/build.sh"
-    exit 1
+    (
+        cd busybox
+        bash build.sh
+    )
 fi
 
 # Run NDK build first
