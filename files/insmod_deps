@@ -7,7 +7,34 @@ if [ -z "$MODULE" ];then
     exit 1
 fi
 
+MODULE_BARE="$(basename "$MODULE" | sed 's/.ko$//')"
 MODULE_DIR="$(dirname "$MODULE")"
+
+if cat "$MODULE_DIR/modules.blocklist" | grep -q "$MODULE_BARE";then
+    echo "Skipping module $MODULE"
+    exit 1
+fi
+
+MODULE_SOFTDEPS_FILE="$MODULE_DIR/modules.softdep"
+MODULE_SOFTDEPS="$(cat "$MODULE_SOFTDEPS_FILE" | grep "$MODULE_BARE pre:")"
+
+for dep in $MODULE_SOFTDEPS;do
+    if [ "${dep: -1}" == ":" ];then
+        continue
+    fi
+    if [ -z "${dep// /}" ];then
+        continue
+    fi
+    if [ "$dep" == "softdep" ];then
+        continue
+    fi
+    if [ "$dep" == "$MODULE_BARE" ];then
+        continue
+    fi
+    
+    insmod_deps "${MODULE_DIR}/$dep.ko"
+done
+
 MODULE_DEPS_FILE="$MODULE_DIR/modules.dep"
 MODULE_DEPS="$(cat "$MODULE_DEPS_FILE" | grep "$MODULE:")"
 
