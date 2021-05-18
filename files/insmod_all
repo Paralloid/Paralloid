@@ -1,0 +1,17 @@
+#!/bin/sh
+# Load all modules specified in /vendor/lib/modules/{,*/}modules.load
+# This is required with GKIs since all GKI modules are located in vendor
+# Some modules may require the firmware to be served correctly
+
+for d in $(find /vendor/lib/modules/ -type d);do
+    # We load all modules in all subdirectories of /vendor/lib/modules
+    # Modules for mismatched kernels will fail to load, so they do not
+    # matter here.
+    for m in $(cat "$d/modules.load");do
+        # Let insmod run in the background
+        insmod_deps "$d/$m" &
+    done
+done
+
+# Wait for all insmod calls to finish
+wait

@@ -4,6 +4,9 @@ set -x
 
 export PATH=/bin:/sbin
 
+# First, load all loadable modules from /vendor
+insmod_all
+
 mount -o move /dev /target_tmp/dev
 mount -o move /proc /target_tmp/proc
 # Note: we cannot move /sys to /target_tmp/sys, because
@@ -15,7 +18,7 @@ mount --rbind /sys /target_tmp/sys
 mount -o move /mnt /target_tmp/mnt
 mount -o move /debug_ramdisk /target_tmp/debug_ramdisk
 mount -o move /metadata /target_tmp/metadata
-mount -o move /vendor /target_tmp/vendor
+mount --rbind /vendor /target_tmp/vendor
 mount -o move /odm /target_tmp/odm
 mount -o move /apex /target_tmp/apex
 mount -o move /prism /target_tmp/prism

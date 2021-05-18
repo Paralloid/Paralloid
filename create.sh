@@ -67,7 +67,11 @@ cp files/hotplug rootfs/bin/hotplug
 chmod 0755 rootfs/bin/hotplug
 
 cp files/format-userdata-image rootfs/bin/format-userdata-image
+cp files/insmod_deps rootfs/bin/insmod_deps
+cp files/insmod_all rootfs/bin/insmod_all
 chmod 0755 rootfs/bin/format-userdata-image
+chmod 0755 rootfs/bin/insmod_deps
+chmod 0755 rootfs/bin/insmod_all
 
 cp native/libs/armeabi-v7a/e2fsdroid rootfs/bin/e2fsdroid
 chmod 0755 rootfs/bin/e2fsdroid

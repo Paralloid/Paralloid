@@ -1,0 +1,26 @@
+#!/bin/sh
+
+MODULE="$1"
+
+if [ -z "$MODULE" ];then
+    echo "Please specify path of module"
+    exit 1
+fi
+
+MODULE_DIR="$(dirname "$MODULE")"
+MODULE_DEPS_FILE="$MODULE_DIR/modules.dep"
+MODULE_DEPS="$(cat "$MODULE_DEPS_FILE" | grep "$MODULE:")"
+
+for dep in $MODULE_DEPS;do
+    if [ "${dep: -1}" == ":" ];then
+        continue
+    fi
+    if [ -z "${dep// /}" ];then
+        continue
+    fi
+    
+    insmod_deps "$dep"
+done
+
+echo "Loading module $MODULE"
+insmod "$MODULE"
