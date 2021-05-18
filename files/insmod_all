@@ -7,7 +7,7 @@ for d in $(find /vendor/lib/modules/ -type d);do
     # We load all modules in all subdirectories of /vendor/lib/modules
     # Modules for mismatched kernels will fail to load, so they do not
     # matter here.
-    for m in $(cat "$d/modules.load");do
+    for m in $(cat "$d/modules.load" | grep -E -v "pinctrl-spmi-gpio\.ko");do
         # Let insmod run in the background
         insmod_deps "$d/$m" &
     done

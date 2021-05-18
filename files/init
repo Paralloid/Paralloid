@@ -4,8 +4,7 @@ set -x
 
 export PATH=/bin:/sbin
 
-# First, load all loadable modules from /vendor
-insmod_all
+insmod_all > /dev/kmsg 2>&1
 
 mount -o move /dev /target_tmp/dev
 mount -o move /proc /target_tmp/proc
