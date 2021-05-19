@@ -221,9 +221,37 @@ TARGET_DIR=$(dirname $TARGET)
 
 if [ $TARGET == "internal" ];then
     mount -o ro /dev/block/mapper/system_orig /target
-    # Note: the other system mountpoints, if present as first stage mounts, will be
-    # moved back by the next move_mount_tree command. There is no need to do anything
-    # here specifically for them.
+    
+    # We skipped these partitions using skip_mount.cfg in our rootfs because
+    # they might have been deleted by the user to free up space (if they
+    # do not want to use official ROMs in the internal partitions)
+    # Not skipping them in first stage ramdisk would result in crashes if they
+    # are missing.
+    # Try to mount them back here, and later we shall remove the unneeded
+    # according to the skip_mount.cfg from the actual system
+    # Note that these partitions are mounted in /target_tmp -- they will be
+    # moved to /target by the next move_mount_tree command
+    mkdir -p /target_tmp/{system_ext,product,oem}
+    mount -o ro /dev/block/mapper/system_ext /target_tmp/system_ext
+    mount -o ro /dev/block/mapper/product /target_tmp/product
+    mount -o ro /dev/block/mapper/oem /target_tmp/oem
+    # TODO: implement slotselect for {,Virtual-}A/B
+    
+    # Remove first-stage mountpoints according to skip_mount.cfg
+    for part in /target/system /target/system/system_ext /target/system_ext;do
+        cfg=$part/etc/init/config/skip_mount.cfg
+        if [ ! -f $cfg ];then
+            continue
+        fi
+        
+        for mnt in $(cat $cfg);do
+            if [ -z "${mnt// }" ];then
+                continue
+            fi
+            # The first-stage mountpoints were moved to /target_tmp
+            umount /target_tmp$mnt
+        done
+    done
 else
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
@@ -240,12 +268,6 @@ else
         # Call the same script in /bin that the diverter UI uses
         format-userdata-image $TARGET_DIR/userdata.img
     fi
-    
-    # Remove the default system partition mountpoints -- if these are needed, they
-    # shall be flashed as images in their respective directory
-    umount /target_tmp/oem
-    umount /target_tmp/system_ext
-    umount /target_tmp/product
     
     # Mount the system images
     mount -o ro,loop $TARGET /target
