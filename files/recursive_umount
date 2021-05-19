@@ -1,0 +1,11 @@
+#!/bin/sh
+
+ROOT="$1"
+
+if [ -z "$ROOT" ];then
+    exit 1
+fi
+
+for mnt in $(cat /proc/mounts | grep " $ROOT" | cut -d " " -f 2 | sort -r);do
+    umount "$mnt"
+done

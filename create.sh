@@ -30,7 +30,7 @@ popd
 rm -Rf rootfs rootfs.img
 
 # This list should include all possible first-stage mountpoints on all known devices
-mkdir -p rootfs/{apex,sbin,bin,config,proc,sys,dev,system/bin,vendor,product,odm,mnt,first_stage_ramdisk,tmp,metadata,bt_firmware,efs,firmware,oem,persist,postinstall,system_ext,sec_storage,dev/pts,dev/socket,sys/fs/selinux,mnt/vendor,mnt/product,debug_ramdisk,system/system_ext/etc/init/config,system/etc/init/config/,prism,optics}
+mkdir -p rootfs/{apex,sbin,bin,config,proc,sys,dev,system/bin,vendor,product,odm,mnt,first_stage_ramdisk,tmp,metadata,bt_firmware,efs,firmware,oem,persist,postinstall,system_ext,sec_storage,dev/pts,dev/socket,sys/fs/selinux,mnt/vendor,mnt/product,debug_ramdisk,system/system_ext/etc/init/config,system/etc/init/config/,prism,optics,paralloid_ramdisk,paralloid_oldroot}
 # Temporary directories for Paralloid's boot process
 mkdir -p rootfs/target/ rootfs/target_tmp/
 
@@ -66,7 +66,9 @@ chmod 0755 rootfs/init
 chmod 0755 rootfs/system/bin/init
 
 cp files/format-userdata-image rootfs/bin/format-userdata-image
+cp files/recursive_umount rootfs/bin/recursive_umount
 chmod 0755 rootfs/bin/format-userdata-image
+chmod 0755 rootfs/bin/recursive_umount
 
 cp native/libs/armeabi-v7a/e2fsdroid rootfs/bin/e2fsdroid
 chmod 0755 rootfs/bin/e2fsdroid

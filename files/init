@@ -4,6 +4,25 @@ set -x
 
 export PATH=/bin:/sbin
 
+# Move our rootfs to a ramdisk to free up the original system partition
+if [ -z "$PARALLOID_RAMDISK" ];then
+    # Gain access to the raw rootfs without all the mountpoints
+    mount -o bind / /paralloid_oldroot
+    # Copy all of rootfs to a tmpfs mounted on /paralloid_ramdisk
+    mount -t tmpfs none /paralloid_ramdisk
+    cp -R /paralloid_oldroot/* /paralloid_ramdisk/
+    umount /paralloid_oldroot/
+    # Switch to the new rootfs in ramdisk
+    MOVE_MOUNT_RBIND_DIRS="sys" move_mount_tree / /paralloid_ramdisk
+    export PARALLOID_RAMDISK=true
+    cd /paralloid_ramdisk
+    pivot_root /paralloid_ramdisk paralloid_oldroot
+    exec chroot . /system/bin/init
+fi
+
+# Unmount the old root filesystem to free up the system partition
+recursive_umount /paralloid_oldroot
+
 # Mount a tmpfs on /target_tmp so that we can create mountpoints as needed
 mount -t tmpfs none /target_tmp
 
