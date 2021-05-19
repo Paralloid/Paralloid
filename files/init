@@ -243,6 +243,7 @@ else
     
     # Remove the default system partition mountpoints -- if these are needed, they
     # shall be flashed as images in their respective directory
+    umount /target_tmp/oem
     umount /target_tmp/system_ext
     umount /target_tmp/product
     
