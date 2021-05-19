@@ -4,6 +4,9 @@ set -x
 
 export PATH=/bin:/sbin
 
+# Mount a tmpfs on /target_tmp so that we can create mountpoints as needed
+mount -t tmpfs none /target_tmp
+
 # Note: we cannot move /sys to /target_tmp/sys, because
 # bionic libc wants at least one of /dev/null and /sys/fs/selinux/null
 # otherwise it segfaults. Moving /sys here will cause all the following

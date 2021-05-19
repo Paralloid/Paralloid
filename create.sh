@@ -29,8 +29,10 @@ popd
 
 rm -Rf rootfs rootfs.img
 
+# This list should include all possible first-stage mountpoints on all known devices
 mkdir -p rootfs/{apex,sbin,bin,config,proc,sys,dev,system/bin,vendor,product,odm,mnt,first_stage_ramdisk,tmp,metadata,bt_firmware,efs,firmware,oem,persist,postinstall,system_ext,sec_storage,dev/pts,dev/socket,sys/fs/selinux,mnt/vendor,mnt/product,debug_ramdisk,system/system_ext/etc/init/config,system/etc/init/config/,prism,optics}
-mkdir -p rootfs/target/ rootfs/target_tmp/{dev,proc,sys,mnt,debug_ramdisk,metadata,vendor,odm,prism,optics,apex}
+# Temporary directories for Paralloid's boot process
+mkdir -p rootfs/target/ rootfs/target_tmp/
 
 cp busybox/build/busybox rootfs/bin/busybox
 chmod 0755 rootfs/bin/busybox
