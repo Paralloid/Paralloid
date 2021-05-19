@@ -73,8 +73,10 @@ chmod 0755 rootfs/bin/mke2fs
 
 cp native/libs/armeabi-v7a/paralloid_ui rootfs/bin/paralloid_ui
 cp native/libs/armeabi-v7a/minfastbootd rootfs/bin/minfastbootd
+cp native/libs/armeabi-v7a/move_mount_tree rootfs/bin/move_mount_tree
 chmod 0755 rootfs/bin/paralloid_ui
 chmod 0755 rootfs/bin/minfastbootd
+chmod 0755 rootfs/bin/move_mount_tree
 
 mkdir -p rootfs/res/images
 cp files/fonts/12x22.png rootfs/res/images/font.png

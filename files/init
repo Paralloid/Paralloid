@@ -4,23 +4,12 @@ set -x
 
 export PATH=/bin:/sbin
 
-mount -o move /dev /target_tmp/dev
-mount -o move /proc /target_tmp/proc
 # Note: we cannot move /sys to /target_tmp/sys, because
 # bionic libc wants at least one of /dev/null and /sys/fs/selinux/null
 # otherwise it segfaults. Moving /sys here will cause all the following
 # commands to break. Using recursive bind mount copies the mount tree,
 # preserving the original one, which should make it safe.
-mount --rbind /sys /target_tmp/sys
-mount -o move /mnt /target_tmp/mnt
-mount -o move /debug_ramdisk /target_tmp/debug_ramdisk
-mount -o move /metadata /target_tmp/metadata
-mount -o move /vendor /target_tmp/vendor
-mount -o move /odm /target_tmp/odm
-mount -o move /apex /target_tmp/apex
-mount -o move /prism /target_tmp/prism
-mount -o move /optics /target_tmp/optics
-#TODO: Other mount points for non-GSI (system_ext? product?) + Device-specific (prism,optics)
+MOVE_MOUNT_RBIND_DIRS="sys" move_mount_tree / /target_tmp
 
 # Re-mount some of the filesystems we just moved
 # We don't need to mount /sys because we used --rbind
@@ -229,6 +218,9 @@ TARGET_DIR=$(dirname $TARGET)
 
 if [ $TARGET == "internal" ];then
     mount -o ro /dev/block/mapper/system_orig /target
+    # Note: the other system mountpoints, if present as first stage mounts, will be
+    # moved back by the next move_mount_tree command. There is no need to do anything
+    # here specifically for them.
 else
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
@@ -245,6 +237,11 @@ else
         # Call the same script in /bin that the diverter UI uses
         format-userdata-image $TARGET_DIR/userdata.img
     fi
+    
+    # Remove the default system partition mountpoints -- if these are needed, they
+    # shall be flashed as images in their respective directory
+    umount /target_tmp/system_ext
+    umount /target_tmp/product
     
     # Mount the system images
     mount -o ro,loop $TARGET /target
@@ -264,20 +261,9 @@ else
     mount -o bind /dev/null /adb_debug.prop
 fi
 
-# Undo what we did earlier
-mount -o move /target_tmp/apex /target/apex
-mount -o move /target_tmp/dev /target/dev
-mount -o move /target_tmp/proc /target/proc
-mount -o move /target_tmp/sys /target/sys
-mount -o move /target_tmp/mnt /target/mnt
-mount -o move /target_tmp/debug_ramdisk /target/debug_ramdisk
-mount -o move /target_tmp/metadata /target/metadata
-mount -o move /target_tmp/vendor /target/vendor
-mount -o move /target_tmp/odm /target/odm
-mount -o move /target_tmp/apex /target/apex
-mount -o move /target_tmp/prism /target/prism
-mount -o move /target_tmp/optics /target/optics
-#TODO: Other mount points for non-GSI (system_ext? product?)
+# Move all first stage mountpoints to the new root (excluding those that
+# we explicitly unmounted)
+move_mount_tree /target_tmp /target
 
 if [ $TARGET != "internal" ];then
     # Create loop device for userdata on sdcard
