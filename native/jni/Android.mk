@@ -67,4 +67,13 @@ LOCAL_LDLIBS += -lz
 
 include $(BUILD_EXECUTABLE)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := move_mount_tree
+LOCAL_STATIC_LIBRARIES := libbase libparalloid
+
+LOCAL_SRC_FILES := \
+    move_mount_tree/main.cpp \
+    
+include $(BUILD_EXECUTABLE)
+
 include $(LOCAL_PATH)/external/Android.mk

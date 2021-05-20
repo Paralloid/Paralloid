@@ -4,23 +4,34 @@ set -x
 
 export PATH=/bin:/sbin
 
-mount -o move /dev /target_tmp/dev
-mount -o move /proc /target_tmp/proc
+# Move our rootfs to a ramdisk to free up the original system partition
+if [ -z "$PARALLOID_RAMDISK" ];then
+    # Gain access to the raw rootfs without all the mountpoints
+    mount -o bind / /paralloid_oldroot
+    # Copy all of rootfs to a tmpfs mounted on /paralloid_ramdisk
+    mount -t tmpfs none /paralloid_ramdisk
+    cp -R /paralloid_oldroot/* /paralloid_ramdisk/
+    umount /paralloid_oldroot/
+    # Switch to the new rootfs in ramdisk
+    MOVE_MOUNT_RBIND_DIRS="sys" move_mount_tree / /paralloid_ramdisk
+    export PARALLOID_RAMDISK=true
+    cd /paralloid_ramdisk
+    pivot_root /paralloid_ramdisk paralloid_oldroot
+    exec chroot . /system/bin/init
+fi
+
+# Unmount the old root filesystem to free up the system partition
+recursive_umount /paralloid_oldroot
+
+# Mount a tmpfs on /target_tmp so that we can create mountpoints as needed
+mount -t tmpfs none /target_tmp
+
 # Note: we cannot move /sys to /target_tmp/sys, because
 # bionic libc wants at least one of /dev/null and /sys/fs/selinux/null
 # otherwise it segfaults. Moving /sys here will cause all the following
 # commands to break. Using recursive bind mount copies the mount tree,
 # preserving the original one, which should make it safe.
-mount --rbind /sys /target_tmp/sys
-mount -o move /mnt /target_tmp/mnt
-mount -o move /debug_ramdisk /target_tmp/debug_ramdisk
-mount -o move /metadata /target_tmp/metadata
-mount -o move /vendor /target_tmp/vendor
-mount -o move /odm /target_tmp/odm
-mount -o move /apex /target_tmp/apex
-mount -o move /prism /target_tmp/prism
-mount -o move /optics /target_tmp/optics
-#TODO: Other mount points for non-GSI (system_ext? product?) + Device-specific (prism,optics)
+MOVE_MOUNT_RBIND_DIRS="sys" move_mount_tree / /target_tmp
 
 # Re-mount some of the filesystems we just moved
 # We don't need to mount /sys because we used --rbind
@@ -229,6 +240,37 @@ TARGET_DIR=$(dirname $TARGET)
 
 if [ $TARGET == "internal" ];then
     mount -o ro /dev/block/mapper/system_orig /target
+    
+    # We skipped these partitions using skip_mount.cfg in our rootfs because
+    # they might have been deleted by the user to free up space (if they
+    # do not want to use official ROMs in the internal partitions)
+    # Not skipping them in first stage ramdisk would result in crashes if they
+    # are missing.
+    # Try to mount them back here, and later we shall remove the unneeded
+    # according to the skip_mount.cfg from the actual system
+    # Note that these partitions are mounted in /target_tmp -- they will be
+    # moved to /target by the next move_mount_tree command
+    mkdir -p /target_tmp/{system_ext,product,oem}
+    mount -o ro /dev/block/mapper/system_ext /target_tmp/system_ext
+    mount -o ro /dev/block/mapper/product /target_tmp/product
+    mount -o ro /dev/block/mapper/oem /target_tmp/oem
+    # TODO: implement slotselect for {,Virtual-}A/B
+    
+    # Remove first-stage mountpoints according to skip_mount.cfg
+    for part in /target/system /target/system/system_ext /target/system_ext;do
+        cfg=$part/etc/init/config/skip_mount.cfg
+        if [ ! -f $cfg ];then
+            continue
+        fi
+        
+        for mnt in $(cat $cfg);do
+            if [ -z "${mnt// }" ];then
+                continue
+            fi
+            # The first-stage mountpoints were moved to /target_tmp
+            umount /target_tmp$mnt
+        done
+    done
 else
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
@@ -264,20 +306,9 @@ else
     mount -o bind /dev/null /adb_debug.prop
 fi
 
-# Undo what we did earlier
-mount -o move /target_tmp/apex /target/apex
-mount -o move /target_tmp/dev /target/dev
-mount -o move /target_tmp/proc /target/proc
-mount -o move /target_tmp/sys /target/sys
-mount -o move /target_tmp/mnt /target/mnt
-mount -o move /target_tmp/debug_ramdisk /target/debug_ramdisk
-mount -o move /target_tmp/metadata /target/metadata
-mount -o move /target_tmp/vendor /target/vendor
-mount -o move /target_tmp/odm /target/odm
-mount -o move /target_tmp/apex /target/apex
-mount -o move /target_tmp/prism /target/prism
-mount -o move /target_tmp/optics /target/optics
-#TODO: Other mount points for non-GSI (system_ext? product?)
+# Move all first stage mountpoints to the new root (excluding those that
+# we explicitly unmounted)
+move_mount_tree /target_tmp /target
 
 if [ $TARGET != "internal" ];then
     # Create loop device for userdata on sdcard
