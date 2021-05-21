@@ -73,7 +73,7 @@ bool FastbootDevice::WriteStatus(FastbootResult result, const std::string& messa
     size_t response_len = kResponseReasonSize + msg_len;
     auto write_ret = this->get_transport()->Write(buf, response_len);
     if (write_ret != static_cast<ssize_t>(response_len)) {
-        std::cout << "Failed to write " << message;
+        std::cout << "Failed to write " << message << std::endl;
         return false;
     }
 
@@ -94,12 +94,12 @@ void FastbootDevice::ExecuteCommands() {
     for (;;) {
         auto bytes_read = transport_->Read(command, FB_RESPONSE_SZ);
         if (bytes_read == -1) {
-            std::cout << "Couldn't read command";
+            std::cout << "Couldn't read command" << std::endl;
             return;
         }
         command[bytes_read] = '\0';
 
-        std::cout << "Fastboot command: " << command;
+        std::cout << "Fastboot command: " << command << std::endl;
 
         std::vector<std::string> args;
         std::string cmd_name;
