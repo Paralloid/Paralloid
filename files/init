@@ -20,6 +20,12 @@ if [ -z "$PARALLOID_RAMDISK" ];then
     exec chroot . /system/bin/init
 fi
 
+# Remember the original rootfs block device, which should be the `system` partition
+# This will be used for overwriting the system partition
+# TODO: Maybe we should pull in part of fs_mgr to implement slotselect, and not
+# depend on this hack.
+export PARALLOID_ROOT_BLKDEV=$(basename $(cat /proc/mounts | grep " /paralloid_oldroot ext4 " | cut -d ' ' -f 1))
+
 # Unmount the old root filesystem to free up the system partition
 recursive_umount /paralloid_oldroot
 

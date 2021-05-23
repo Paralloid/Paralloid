@@ -2,6 +2,7 @@
 #include "fastboot_device.h"
 
 #include <fcntl.h>
+#include <linux/fs.h>
 #include <sparse/sparse.h>
 
 #include <cstdlib>
@@ -91,18 +92,43 @@ int FlashFd(int fd, std::vector<char>& downloaded_data) {
     }
 }
 
-int Flash(FastbootDevice* device, const std::string& target) {
-    auto targetDesc = FlashableTargetDesc::parse(target);
-    
-    if (targetDesc == std::nullopt) {
-        return -EINVAL;
+int FlashPartition(FastbootDevice* device, const std::string& partition) {
+    // TODO: support resizing dynamic partitions and possibly other HLOS partitions
+    if (partition == "paralloid") {
+        auto _root_blkdev = getenv("PARALLOID_ROOT_BLKDEV");
+        if (_root_blkdev == nullptr) {
+            return -ENOENT;
+        }
+        
+        std::vector<char> data = std::move(device->download_data());
+        if (data.size() == 0) {
+            return -EINVAL;
+        }
+        
+        int fd = open(("/dev/" + std::string(_root_blkdev)).c_str(), O_RDWR | O_SYNC);
+        if (fd < 0) {
+            return -EINVAL;
+        }
+        
+        // Remove any possible write protection on the block device
+        int ro_state = 0;
+        ioctl(fd, BLKROSET, &ro_state);
+        int res = FlashFd(fd, data);
+        close(fd);
+        
+        return res;
+    } else {
+        return -ENOENT;
     }
-    
-    if (!targetDesc->storageDeviceMounted()) {
+}
+
+// Flash a partition image described by targetDesc
+int FlashTarget(FastbootDevice* device, FlashableTargetDesc targetDesc) {
+    if (!targetDesc.storageDeviceMounted()) {
         return -ENOENT;
     }
     
-    auto img = targetDesc->toBootableImage();
+    auto img = targetDesc.toBootableImage();
     
     // Create the directory for the target image
     if (!fs::exists(img.imagePath()) && !fs::create_directories(img.imagePath())) {
@@ -115,7 +141,7 @@ int Flash(FastbootDevice* device, const std::string& target) {
         return -EINVAL;
     }
     
-    int fd = OpenPartitionImage(img, *targetDesc->partition_name);
+    int fd = OpenPartitionImage(img, *targetDesc.partition_name);
     if (fd < 0) {
         return fd;
     }
@@ -124,8 +150,18 @@ int Flash(FastbootDevice* device, const std::string& target) {
     close(fd);
     
     if (res >= 0) {
-        device->WriteInfo("Written to " + img.partitionImagePath(*targetDesc->partition_name)->string());
+        device->WriteInfo("Written to " + img.partitionImagePath(*targetDesc.partition_name)->string());
     }
     
     return res;
+}
+
+int Flash(FastbootDevice* device, const std::string& target) {
+    auto targetDesc = FlashableTargetDesc::parse(target);
+    
+    if (targetDesc == std::nullopt) {
+        return FlashPartition(device, target);
+    } else {
+        return FlashTarget(device, *targetDesc);
+    }
 }
