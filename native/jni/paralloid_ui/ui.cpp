@@ -86,6 +86,9 @@ int UI::init() {
 }
 
 void UI::exit(string message) {
+    // Set menu to null to prevent any public function in this namespace from running
+    menu = nullptr;
+    
     gr_color(0, 0, 0, 0);
     gr_clear();
     // Switch to the other buffer and clear it too
