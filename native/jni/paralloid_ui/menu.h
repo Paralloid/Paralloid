@@ -17,6 +17,7 @@ protected:
     virtual void populateItems() = 0;
 public:
     shared_ptr<vector<MenuItem>> getItems();
+    void resetCache();
 };
 
 #define ACTION_BACK          1000

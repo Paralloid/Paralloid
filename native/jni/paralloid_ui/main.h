@@ -1,12 +1,13 @@
 #pragma once
 #include "ui.h"
+#include "menu.h"
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h>
 
 using namespace std;
 
-extern shared_ptr<UI::Menu> main_menu;
+extern shared_ptr<CachedMenu> main_menu;
 
 // `target` can be "internal", which means the system_orig internal partition,
 // or path to the system image file. See the `boot-target` script for details

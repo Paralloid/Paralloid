@@ -37,6 +37,10 @@ shared_ptr<vector<MenuItem>> CachedMenu::getItems() {
     return items;
 }
 
+void CachedMenu::resetCache() {
+    items = nullptr;
+}
+
 MainMenu::MainMenu() {
     // Only start the countdown timer when MainMenu is
     // created for the first time (there will be only

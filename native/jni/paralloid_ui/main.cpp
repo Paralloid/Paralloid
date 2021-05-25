@@ -1,11 +1,27 @@
 #include "main.h"
-#include "menu.h"
 #include <fstream>
+#include <signal.h>
 
 // Menu instances
-shared_ptr<UI::Menu> main_menu;
+shared_ptr<CachedMenu> main_menu;
+
+// Update the menu on SIGHUP
+// This is used to signal sdcard being mounted
+static void sighup_handler(int _signo) {
+    // Only reset the cache of the main menu as it is the only one
+    // that is concerned with the mount state of the sdcard
+    // Other menus related to sdcard cannot be loaded unless the main menu
+    // actually shows the sdcard option
+    main_menu->resetCache();
+    // Force refresh the menu regardless of the current displayed menu
+    // If we are not on main_menu right now, this will simply do nothing
+    UI::refreshMenu();
+}
 
 int main() {
+    // Setup the SIGHUP handler
+    signal(SIGHUP, &sighup_handler);
+    
     // Initialize the menus
     main_menu = make_shared<MainMenu>();
     

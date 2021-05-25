@@ -194,25 +194,6 @@ for i in $(cd /sys/dev/block; echo *);do
     DEVNAME=""
 done
 
-hostController="$(readlink /dev/block/by-name/super |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
-sdcard=""
-for k in $(seq 1 15);do
-    for i in $(find /dev -name 'mmcblk*p1');do
-        if echo "$i" |grep -v -q "$hostController";then
-            sdcard="$i"
-        fi
-    done
-    [ -n "$sdcard" ] && break
-    sleep 1
-done
-if [ -n "$sdcard" ] && [ -b "$sdcard" ];then
-    mkdir /dev/mntSD
-    mount -o rw "$sdcard" /dev/mntSD
-    if [ $? -eq 0 ];then
-        touch /dev/.sdcard_mounted
-    fi
-fi
-
 # Mount userdata too (without decryption)
 mkdir /dev/mntDATA
 mount -o ro /dev/block/by-name/userdata /dev/mntDATA
@@ -233,6 +214,31 @@ fi
 
 # Launch the Paralloid UI
 /bin/paralloid_ui > /dev/kmsg 2>&1 &
+
+# Mount sdcard asynchronously (because the controller comes up slow)
+(
+    hostController="$(readlink /dev/block/by-name/super |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
+    sdcard=""
+    for k in $(seq 1 15);do
+        for i in $(find /dev -name 'mmcblk*p1');do
+            if echo "$i" |grep -v -q "$hostController";then
+                sdcard="$i"
+            fi
+        done
+        [ -n "$sdcard" ] && break
+        [ -f /dev/booting ] && break
+        sleep 1
+    done
+    if [ -n "$sdcard" ] && [ -b "$sdcard" ];then
+        mkdir /dev/mntSD
+        mount -o rw "$sdcard" /dev/mntSD
+        if [ $? -eq 0 ];then
+            touch /dev/.sdcard_mounted
+            # Notify the UI process to update the menu
+            pkill -HUP paralloid_ui
+        fi
+    fi
+) &
 
 # Wait until we are notified to boot by the UI
 while [ ! -f /dev/.paralloid_boot_target ];do
