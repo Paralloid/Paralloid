@@ -29,7 +29,7 @@ public:
 #define ACTION_REBOOT_REC    1101
 #define ACTION_REBOOT_BL     1102
 
-#define MAIN_MENU_TIMEOUT    10
+#define MAIN_MENU_TIMEOUT    20
 class MainMenu : public CachedMenu {
 private:
     int remaining_secs = MAIN_MENU_TIMEOUT;
