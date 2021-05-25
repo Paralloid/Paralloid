@@ -119,6 +119,13 @@ void UI::refreshMenu() {
     menu_title = menu->getTitle();
     menu_items = menu->getItems();
     menu_extra_text = menu->getExtraText();
+    
+    // The number of updated items may be fewer than before
+    if (selected_item >= menu_items->size()) {
+        selected_item = menu_items->size() - 1;
+        menu->onActiveItemChanged(selected_item, menu_items->at(selected_item).action);
+    }
+    
     render();
 }
 
