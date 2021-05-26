@@ -75,6 +75,7 @@ struct FlashableTargetDesc {
     std::optional<std::string> partition_name;
     
     bool storageDeviceMounted();
+    bool storageDeviceMountError();
     
     // This conversion loses information about "partition_name" in the return value
     BootableImage toBootableImage();

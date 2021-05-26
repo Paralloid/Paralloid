@@ -125,6 +125,11 @@ int FlashPartition(FastbootDevice* device, const std::string& partition) {
 // Flash a partition image described by targetDesc
 int FlashTarget(FastbootDevice* device, FlashableTargetDesc targetDesc) {
     if (!targetDesc.storageDeviceMounted()) {
+        if (targetDesc.storage_device == "userdata" && targetDesc.storageDeviceMountError()) {
+            device->WriteInfo("We failed to mount the userdata partition.");
+            device->WriteInfo("This is most likely caused by metadata encryption being enabled on your device.");
+            device->WriteInfo("In the current state, we cannot install images to the userdata partition.");
+        }
         return -ENOENT;
     }
     

@@ -197,6 +197,10 @@ done
 # Mount userdata too (without decryption)
 mkdir /dev/mntDATA
 mount -o ro /dev/block/by-name/userdata /dev/mntDATA
+if [ $? -ne 0 ];then
+    # We cannot mount userdata if the device uses metadata encryption on data
+    touch /dev/.userdata_mount_error
+fi
 # Only ever mount data as R/W when the system has already written
 # to the data partition. Otherwise, the internal system partition
 # will fail to boot.

@@ -27,6 +27,16 @@ bool FlashableTargetDesc::storageDeviceMounted() {
     return true;
 }
 
+bool FlashableTargetDesc::storageDeviceMountError() {
+    if (storage_device == "userdata" && fs::exists("/dev/.userdata_mount_error")) {
+        return true;
+    }
+    
+    // TODO: sdcard?
+    
+    return false;
+}
+
 BootableImage FlashableTargetDesc::toBootableImage() {
     auto base_path = fs::path(storage_device == "sdcard" ?
         EXT_SDCARD_BASE_PATH : USERDATA_BASE_PATH);
