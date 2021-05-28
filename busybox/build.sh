@@ -55,6 +55,8 @@ cp "../../android-busybox-ndk/osm0sis-full-unified.config" .config
 # We need `mdev` to be present
 sed -i "s/# CONFIG_MDEV is not set/CONFIG_MDEV=y/" .config
 sed -i "s/# CONFIG_FEATURE_MDEV_DAEMON is not set/CONFIG_FEATURE_MDEV_DAEMON=y/" .config
+# Also fallocate
+sed -i "s/# CONFIG_FALLOCATE is not set/CONFIG_FALLOCATE=y/" .config
 # These syscalls are now present in r22, so no need to redefine them here
 sed -i "s/pid_t getsid/pid_t _getsid/" libbb/missing_syscalls.c
 sed -i "s/int sethostname/int _sethostname/" libbb/missing_syscalls.c
