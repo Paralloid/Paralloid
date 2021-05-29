@@ -381,7 +381,9 @@ if [ $TARGET != "internal" ];then
         # of the UFS / eMMC host controller. In our case, this is not possible since we are
         # overriding the block device with a loop device.
         sed -i -E -e '/sd_userdata/s;inlinecrypt,?;;g' /dev/override/fstabs/$fstab
-        sed -i -E -e '/sd_userdata/s;fileencryption=[^, \t]*(,?);fileencryption=aes-256-xts\1;g' /dev/override/fstabs/$fstab
+        # Remove all extra flags from the fileencryption parameter -- these may include
+        # inlinecrypt and wrappedkeys
+        sed -i -E -e '/sd_userdata/s;fileencryption=([^,: \t]*)(:[^, \t]*)?(,?);fileencryption=\1\3;g' /dev/override/fstabs/$fstab
         # Disable metadata encryption -- this likely requires inline encryption hardware as well;
         # software-based fallback needs kernel options which may not be enabled on all kernels
         sed -i -E -e 's;keydirectory=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
