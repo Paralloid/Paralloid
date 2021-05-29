@@ -57,6 +57,8 @@ sed -i "s/# CONFIG_MDEV is not set/CONFIG_MDEV=y/" .config
 sed -i "s/# CONFIG_FEATURE_MDEV_DAEMON is not set/CONFIG_FEATURE_MDEV_DAEMON=y/" .config
 # Also fallocate
 sed -i "s/# CONFIG_FALLOCATE is not set/CONFIG_FALLOCATE=y/" .config
+# Enable large file support
+sed -i "s/# CONFIG_LFS is not set/CONFIG_LFS=y/" .config
 # These syscalls are now present in r22, so no need to redefine them here
 sed -i "s/pid_t getsid/pid_t _getsid/" libbb/missing_syscalls.c
 sed -i "s/int sethostname/int _sethostname/" libbb/missing_syscalls.c
@@ -73,7 +75,7 @@ export CC="${NDK_HOME}/toolchains/llvm/prebuilt/linux-${HOST_ARCH}/bin/armv7a-li
 # annotated with MAIN_EXTERNALLY_VISIBLE when optimizations are enabled
 # (ref: https://github.com/termux/termux-packages/blob/master/packages/busybox/0001-clang-fix.patch)
 # in addition, add the `-static` flag to force static linking
-export CFLAGS="-DANDROID -D__ANDROID__ -D__ANDROID_API__=21 -DSK_RELEASE -O0 -static"
+export CFLAGS="-DANDROID -D__ANDROID__ -D__ANDROID_API__=21 -DSK_RELEASE -D__USE_FILE_OFFSET64 -O0 -static"
 # There seems to be race conditions in building the networking part, causing
 # random build errors. Unfortunately, this means we have to build with -j1 right now.
 make ARCH=arm CROSS_COMPILE="${CROSS_COMPILE}" CC="${CC}" CFLAGS="${CFLAGS}" -j1
