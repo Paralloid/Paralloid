@@ -374,6 +374,10 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e 's;([^ ]*)(.*/data[[:>:]].*);/dev/block/sd_userdata \2;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;f2fs;ext4;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;fsync_mode=nobarrier,reserve_root=32768,;;g' /dev/override/fstabs/$fstab
+        # Disable metadata encryption
+        # TODO: Mount separate metadata.img for each image and remove this
+        sed -i -E -e 's;keydirectory=[^,]*,?;;g' /dev/override/fstabs/$fstab
+        sed -i -E -e 's;metadata_encryption=[^,]*,?;;g' /dev/override/fstabs/$fstab
         sed -i '/product/d' /dev/override/fstabs/$fstab
     done
 
