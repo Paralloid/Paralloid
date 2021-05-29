@@ -389,6 +389,7 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e 's;keydirectory=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         sed -i -E -e 's;metadata_encryption=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         sed -i '/product/d' /dev/override/fstabs/$fstab
+        sed -i '/system_ext/d' /dev/override/fstabs/$fstab
         # Remove stray commas at the end of option lists that may be resulted from the
         # previous sed commands
         sed -i -E -e 's;, ; ;g' /dev/override/fstabs/$fstab
