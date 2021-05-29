@@ -377,16 +377,17 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e '/sd_userdata/s;fsync_mode=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;reserve_root=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;checkpoint=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
-        # Disable inline encryption
+        # Disable inline encryption -- inline encryption and wrapped_keys require support
+        # of the UFS / eMMC host controller. In our case, this is not possible since we are
+        # overriding the block device with a loop device.
         sed -i -E -e '/sd_userdata/s;inlinecrypt,?;;g' /dev/override/fstabs/$fstab
-        # Get rid of inline encryption and hardware-wrapped keys in fileencryption parameters
         sed -i -E -e '/sd_userdata/s;fileencryption=[^, \t]*(,?);fileencryption=aes-256-xts\1;g' /dev/override/fstabs/$fstab
-        # Disable metadata encryption
-        # TODO: Mount separate metadata.img for each image and remove this
+        # Disable metadata encryption -- this likely requires inline encryption hardware as well;
+        # software-based fallback needs kernel options which may not be enabled on all kernels
         sed -i -E -e 's;keydirectory=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         sed -i -E -e 's;metadata_encryption=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         sed -i '/product/d' /dev/override/fstabs/$fstab
-        # Remove stay commas at the end of option lists that may be resulted from the
+        # Remove stray commas at the end of option lists that may be resulted from the
         # previous sed commands
         sed -i -E -e 's;, ; ;g' /dev/override/fstabs/$fstab
         sed -i -E -e 's;,$;;g' /dev/override/fstabs/$fstab
