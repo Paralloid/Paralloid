@@ -373,12 +373,19 @@ if [ $TARGET != "internal" ];then
         sed -i /sdcard/d /dev/override/fstabs/$fstab
         sed -i -E -e 's;([^ ]*)(.*/data[[:>:]].*);/dev/block/sd_userdata \2;g' /dev/override/fstabs/$fstab
         sed -i -E -e '/sd_userdata/s;f2fs;ext4;g' /dev/override/fstabs/$fstab
-        sed -i -E -e '/sd_userdata/s;fsync_mode=nobarrier,reserve_root=32768,;;g' /dev/override/fstabs/$fstab
+        # Remove f2fs options typically used by Android that are not supported by ext4
+        sed -i -E -e '/sd_userdata/s;fsync_mode=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
+        sed -i -E -e '/sd_userdata/s;reserve_root=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
+        sed -i -E -e '/sd_userdata/s;checkpoint=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         # Disable metadata encryption
         # TODO: Mount separate metadata.img for each image and remove this
-        sed -i -E -e 's;keydirectory=[^,]*,?;;g' /dev/override/fstabs/$fstab
-        sed -i -E -e 's;metadata_encryption=[^,]*,?;;g' /dev/override/fstabs/$fstab
+        sed -i -E -e 's;keydirectory=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
+        sed -i -E -e 's;metadata_encryption=[^, \t]*,?;;g' /dev/override/fstabs/$fstab
         sed -i '/product/d' /dev/override/fstabs/$fstab
+        # Remove stay commas at the end of option lists that may be resulted from the
+        # previous sed commands
+        sed -i -E -e 's;, ; ;g' /dev/override/fstabs/$fstab
+        sed -i -E -e 's;,$;;g' /dev/override/fstabs/$fstab
     done
 
     # Label the overridden files with the correct SELinux contexts using an in-memory fs
