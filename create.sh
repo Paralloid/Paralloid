@@ -25,6 +25,9 @@ fi
 # Run NDK build first
 pushd native
 ndk-build -j || exit 1
+pushd inject
+ndk-build -j || exit 1
+popd
 popd
 
 rm -Rf rootfs rootfs.img
@@ -67,8 +70,10 @@ chmod 0755 rootfs/system/bin/init
 
 cp files/format-userdata-image rootfs/bin/format-userdata-image
 cp files/recursive_umount rootfs/bin/recursive_umount
+cp files/generate-image-id rootfs/bin/generate-image-id
 chmod 0755 rootfs/bin/format-userdata-image
 chmod 0755 rootfs/bin/recursive_umount
+chmod 0755 rootfs/bin/generate-image-id
 
 cp native/libs/armeabi-v7a/e2fsdroid rootfs/bin/e2fsdroid
 chmod 0755 rootfs/bin/e2fsdroid
@@ -81,6 +86,10 @@ cp native/libs/armeabi-v7a/move_mount_tree rootfs/bin/move_mount_tree
 chmod 0755 rootfs/bin/paralloid_ui
 chmod 0755 rootfs/bin/minfastbootd
 chmod 0755 rootfs/bin/move_mount_tree
+
+mkdir -p rootfs/hook
+cp -r native/inject/libs/* rootfs/hook/
+chmod -R 0755 rootfs/hook/
 
 mkdir -p rootfs/res/images
 cp files/fonts/12x22.png rootfs/res/images/font.png

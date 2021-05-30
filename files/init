@@ -288,6 +288,12 @@ if [ $TARGET == "internal" ];then
         done
     done
 else
+    # Generate image ID if it doesn't exist yet
+    if [ ! -f "$TARGET_DIR/id" ];then
+        generate-image-id > "$TARGET_DIR/id"
+    fi
+    TARGET_ID="$(cat "$TARGET_DIR/id")"
+    
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
         # Test if the target filesystem supports fallocate by allocating a small file
@@ -361,6 +367,9 @@ if [ $TARGET != "internal" ];then
     echo "(allow kernel unencrypted_data_file (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
     # Allow kernel to read / write tmpfs files for our ramdisk to work
     echo "(allow kernel tmpfs (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+    # Allow gatekeeperd to load the hook
+    # TODO: Use specific rules instead of permissive
+    echo "(typepermissive gatekeeperd)" >> /dev/override/selinux/plat_sepolicy.cil
 
     # Patch sepolicy file_contexts to label our userdata loop device correctly
     # This is required for FBE (otherwise vdc will fail)
@@ -396,14 +405,31 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e 's;,$;;g' /dev/override/fstabs/$fstab
     done
     
-    # Force gatekeeperd to apply uid offset
-    # This should work with gatekeeperd from Android 10 and later
+    # Save and patch gatekeeperd; it will be executed by our hook wrapper on non-internal targets
     mkdir /dev/override/bin
     cp /target/system/bin/gatekeeperd /dev/override/bin
-    sed -i 's/ro.gsid.image_running/ro.gsid.paralloid_rom/' /dev/override/bin/gatekeeperd
+    # Make gatekeeperd think that we are running a GSI, so that it does not clear the state of Gatekeeper
+    # This is needed to avoid breaking unlocking on other images
+    # The property will be set later when we override build.prop
+    # TODO: This also needs to be done on the internal target, otherwise it will clear every single image's
+    # gatekeeper state whenever its data gets cleared
+    # TODO: Is there a better way of doing this? I am not sure if all gatekeeperd implementations will
+    # honor this property.
+    sed -i "s/ro.gsid.image_running/ro.gsid.paralloid_rom/" /dev/override/bin/gatekeeperd
+    # The hooked gatekeeperd wrapper; this will be bind-mounted upon the original gatekeeperd path
+    # TODO: switch the subdirectory based on system architecture (not Paralloid's)
+    cp /hook/arm64-v8a/gatekeeperd_hooked /dev/override/bin
+    # The actual library that hooks gatekeeperd by LD_PRELOAD
+    mkdir /dev/override/hook
+    cp /hook/arm64-v8a/libgatekeeperd_hook.so /dev/override/hook
+    
+    # Add our own build properties
     mkdir /dev/override/props
     cp /target/system/build.prop /dev/override/props/build.prop.system
-    echo 'ro.gsid.paralloid_rom=1' >> /dev/override/props/build.prop.system
+    # ro.gsid.paralloid_rom replaces ro.gsid.image_running in gatekeeperd binary
+    echo "ro.gsid.paralloid_rom=1" >> /dev/override/props/build.prop.system
+    # Pass the image ID to gatekeeperd hook
+    echo "ro.gsid.paralloid_rom_id=$TARGET_ID" >> /dev/override/props/build.prop.system
 
     # Label the overridden files with the correct SELinux contexts using an in-memory fs
     # /dev/ram0 may not be enough for sepolicy on some devices; it cannot always be grown,
@@ -420,6 +446,8 @@ if [ $TARGET != "internal" ];then
     echo '/selinux/plat_sepolicy.cil u:object_r:sepolicy_file:s0' >> /dev/file_contexts
     # gatekeeperd context
     echo '/bin/gatekeeperd u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
+    echo '/bin/gatekeeperd_hooked u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
+    echo '/hook/libgatekeeperd_hook.so u:object_r:system_lib_file:s0' >> /dev/file_contexts
     # build.prop can just be a rootfs object
     echo '/props/build.prop.system u:object_r:rootfs:s0' >> /dev/file_contexts
     # Populate the temporary fs & apply the contexts
@@ -434,7 +462,7 @@ if [ $TARGET != "internal" ];then
     mount -o bind /dev/mntRAM/selinux/plat_file_contexts /target/system/etc/selinux/plat_file_contexts
     mount -o bind /dev/mntRAM/selinux/plat_sepolicy.cil /target/system/etc/selinux/plat_sepolicy.cil
     # Override gatekeeperd
-    mount -o bind /dev/mntRAM/bin/gatekeeperd /target/system/bin/gatekeeperd
+    mount -o bind /dev/mntRAM/bin/gatekeeperd_hooked /target/system/bin/gatekeeperd
     # Override build.prop
     mount -o bind /dev/mntRAM/props/build.prop.system /target/system/build.prop
 fi

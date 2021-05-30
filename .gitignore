@@ -2,5 +2,7 @@
 /rootfs.img
 /native/libs
 /native/obj
+/native/*/libs
+/native/*/obj
 /busybox/build
 /NDK

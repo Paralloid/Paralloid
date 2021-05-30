@@ -1,0 +1,27 @@
+#!/bin/sh
+
+MAX_ID=4000
+USERDATA_IMAGE_LIST=$(find /dev/mntDATA/Paralloid -name "*" -type d)
+SDCARD_IMAGE_LIST=$(find /dev/mntSD/Paralloid -name "*" -type d)
+
+while true;do
+    ID=$(($RANDOM % 4000 + 1)) # The ID shall never be 0
+    IS_UNIQUE=true
+    for d in $USERDATA_IMAGE_LIST $SDCARD_IMAGE_LIST;do
+        if [[ -z "$d" ]];then
+            continue
+        fi
+        if [[ ! -f "$d/id" ]];then
+            continue
+        fi
+        if [[ "$(cat "$d/id")" == "$ID" ]];then
+            IS_UNIQUE=false
+            break
+        fi
+    done
+    
+    if [[ "$IS_UNIQUE" == "true" ]];then
+        echo "$ID"
+        exit 0
+    fi
+done
