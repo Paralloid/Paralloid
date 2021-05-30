@@ -395,6 +395,15 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e 's;, ; ;g' /dev/override/fstabs/$fstab
         sed -i -E -e 's;,$;;g' /dev/override/fstabs/$fstab
     done
+    
+    # Force gatekeeperd to apply uid offset
+    # This should work with gatekeeperd from Android 10 and later
+    mkdir /dev/override/bin
+    cp /target/system/bin/gatekeeperd /dev/override/bin
+    sed -i 's/ro.gsid.image_running/ro.gsid.paralloid_rom/' /dev/override/bin/gatekeeperd
+    mkdir /dev/override/props
+    cp /target/system/build.prop /dev/override/props/build.prop.system
+    echo 'ro.gsid.paralloid_rom=1' >> /dev/override/props/build.prop.system
 
     # Label the overridden files with the correct SELinux contexts using an in-memory fs
     # /dev/ram0 may not be enough for sepolicy on some devices; it cannot always be grown,
@@ -409,6 +418,10 @@ if [ $TARGET != "internal" ];then
     # sepolicy configuration contexts
     echo '/selinux/plat_file_contexts u:object_r:file_contexts_file:s0' >> /dev/file_contexts
     echo '/selinux/plat_sepolicy.cil u:object_r:sepolicy_file:s0' >> /dev/file_contexts
+    # gatekeeperd context
+    echo '/bin/gatekeeperd u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
+    # build.prop can just be a rootfs object
+    echo '/props/build.prop.system u:object_r:rootfs:s0' >> /dev/file_contexts
     # Populate the temporary fs & apply the contexts
     e2fsdroid -S /dev/file_contexts -f /dev/override -e -a / -u '0 0 1' /dev/ramdisk.img
     mkdir /dev/mntRAM
@@ -420,6 +433,10 @@ if [ $TARGET != "internal" ];then
     # Actually apply the sepolicy override
     mount -o bind /dev/mntRAM/selinux/plat_file_contexts /target/system/etc/selinux/plat_file_contexts
     mount -o bind /dev/mntRAM/selinux/plat_sepolicy.cil /target/system/etc/selinux/plat_sepolicy.cil
+    # Override gatekeeperd
+    mount -o bind /dev/mntRAM/bin/gatekeeperd /target/system/bin/gatekeeperd
+    # Override build.prop
+    mount -o bind /dev/mntRAM/props/build.prop.system /target/system/build.prop
 fi
 
 # UNCOMMENTME: To grab kernel logs to ttyGS0 you'll need SELinux permissive
