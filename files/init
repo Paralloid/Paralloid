@@ -339,37 +339,40 @@ if [ $TARGET != "internal" ];then
     # Set it to 256 so that nothing else may conflict with ours
     mknod -m 0660 /target/dev/block/sd_userdata b 7 256
     losetup /target/dev/block/sd_userdata $TARGET_DIR/userdata.img
+fi
 
-    # Force the system to reload sepolicy instead of using precompiled_sepolicy
-    # by overriding the sha256 checksum files
-    # This facilitates the sepolicy patching process below
-    for partition in system product;do
-      policy_name=$partition
-      if [ $partition = system ];then
+# Force the system to reload sepolicy instead of using precompiled_sepolicy
+# by overriding the sha256 checksum files
+# This facilitates the sepolicy patching process below
+for partition in system product;do
+    policy_name=$partition
+    if [ $partition = system ];then
         policy_name=plat
-      fi
+    fi
 
-      if [ -f /target/$partition/etc/selinux/${policy_name}_sepolicy_and_mapping.sha256 ];then
+    if [ -f /target/$partition/etc/selinux/${policy_name}_sepolicy_and_mapping.sha256 ];then
         mount -o bind /dev/null /target/$partition/etc/selinux/${policy_name}_sepolicy_and_mapping.sha256
-      fi
-    done
+    fi
+done
 
-    # Create a temporary directory to store our overrides
-    # We will apply the correct SELinux labels in bulk later
-    mkdir -p /dev/override
+# Create a temporary directory to store our overrides
+mkdir -p /dev/override
 
-    # Patch sepolicy
-    mkdir -p /dev/override/selinux
-    cp /target/system/etc/selinux/plat_sepolicy.cil /dev/override/selinux/
-    # Allow kernel to read / write unlabeled files for our loop mount to work
-    echo "(allow kernel unlabeled (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+# Patch sepolicy
+mkdir -p /dev/override/selinux
+cp /target/system/etc/selinux/plat_sepolicy.cil /dev/override/selinux/
+# Allow gatekeeperd hooked wrapper to execute the original binary
+echo "(allow gatekeeperd gatekeeperd_exec (file (read getattr execute_no_trans)))" >> /dev/override/selinux/plat_sepolicy.cil
+# Allow kernel to read / write unlabeled files for our loop mount to work
+# Needed for loop-mounting /dev/mntRAM (where our overrides will live) as well
+echo "(allow kernel unlabeled (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+# Allow kernel to read / write tmpfs files for our ramdisk (/dev/mntRAM) to work
+echo "(allow kernel tmpfs (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+
+if [ $TARGET != "internal" ];then
     # Allow kernel to read / write unencrypted_data_file for booting from /data/unencrypted/
     echo "(allow kernel unencrypted_data_file (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
-    # Allow kernel to read / write tmpfs files for our ramdisk to work
-    echo "(allow kernel tmpfs (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
-    # Allow gatekeeperd hooked wrapper to execute the original binary
-    echo "(allow gatekeeperd gatekeeperd_exec (file (read getattr execute_no_trans)))" >> /dev/override/selinux/plat_sepolicy.cil
-
+    
     # Patch sepolicy file_contexts to label our userdata loop device correctly
     # This is required for FBE (otherwise vdc will fail)
     cp /target/system/etc/selinux/plat_file_contexts /dev/override/selinux/
@@ -403,60 +406,70 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e 's;, ; ;g' /dev/override/fstabs/$fstab
         sed -i -E -e 's;,$;;g' /dev/override/fstabs/$fstab
     done
+fi
     
-    # Save the original gatekeeperd; it will be executed by our hook wrapper
-    mkdir /dev/override/bin
-    cp /target/system/bin/gatekeeperd /dev/override/bin
-    # The hooked gatekeeperd wrapper; this will be bind-mounted upon the original gatekeeperd path
-    # TODO: switch the subdirectory based on system architecture (not Paralloid's)
-    # TODO: the hook will also be needed on the internal target to prevent gatekeeperd from clearing
-    #       the state of Gatekeeper
-    cp /hook/arm64-v8a/gatekeeperd_hooked /dev/override/bin
-    # The actual library that hooks gatekeeperd by LD_PRELOAD
-    mkdir /dev/override/hook
-    cp /hook/arm64-v8a/libgatekeeperd_hook.so /dev/override/hook
+# Save the original gatekeeperd; it will be executed by our hook wrapper
+mkdir /dev/override/bin
+cp /target/system/bin/gatekeeperd /dev/override/bin
+# The hooked gatekeeperd wrapper; this will be bind-mounted upon the original gatekeeperd path
+# The internal target also needs the hook to supress state-clearing of the Gatekeeper HAL
+# TODO: switch the subdirectory based on system architecture (not Paralloid's)
+cp /hook/arm64-v8a/gatekeeperd_hooked /dev/override/bin
+# The actual library that hooks gatekeeperd by LD_PRELOAD
+mkdir /dev/override/hook
+cp /hook/arm64-v8a/libgatekeeperd_hook.so /dev/override/hook
     
+if [ $TARGET != "internal" ];then
     # Add our own build properties
     mkdir /dev/override/props
     cp /target/system/build.prop /dev/override/props/build.prop.system
     # Pass the image ID to gatekeeperd hook
     echo "ro.gsid.paralloid_rom_id=$TARGET_ID" >> /dev/override/props/build.prop.system
-
-    # Label the overridden files with the correct SELinux contexts using an in-memory fs
-    # /dev/ram0 may not be enough for sepolicy on some devices; it cannot always be grown,
-    # so just create our own ramdisk image
-    dd if=/dev/zero of=/dev/ramdisk.img bs=1k count=20480
-    mke2fs /dev/ramdisk.img
-    # Default context for everything in the ramdisk (including directories)
-    # If missing, e2fsdroid will abort and leave the filesystem corrupted
-    echo '/.* u:object_r:tmpfs:s0' > /dev/file_contexts
-    # fstab context
-    echo '/fstabs/.* u:object_r:vendor_configs_file:s0' >> /dev/file_contexts
-    # sepolicy configuration contexts
-    echo '/selinux/plat_file_contexts u:object_r:file_contexts_file:s0' >> /dev/file_contexts
-    echo '/selinux/plat_sepolicy.cil u:object_r:sepolicy_file:s0' >> /dev/file_contexts
-    # gatekeeperd context
-    echo '/bin/gatekeeperd u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
-    echo '/bin/gatekeeperd_hooked u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
-    echo '/hook/libgatekeeperd_hook.so u:object_r:system_lib_file:s0' >> /dev/file_contexts
-    # build.prop can just be a rootfs object
-    echo '/props/build.prop.system u:object_r:rootfs:s0' >> /dev/file_contexts
-    # Populate the temporary fs & apply the contexts
-    e2fsdroid -S /dev/file_contexts -f /dev/override -e -a / -u '0 0 1' /dev/ramdisk.img
-    mkdir /dev/mntRAM
-    mount /dev/ramdisk.img /dev/mntRAM
-    # Actually apply the fstab override
-    for fstab in $(cd /target/vendor/etc/; echo fstab*);do
-        mount -o bind /dev/mntRAM/fstabs/$fstab /target/vendor/etc/$fstab
-    done
-    # Actually apply the sepolicy override
-    mount -o bind /dev/mntRAM/selinux/plat_file_contexts /target/system/etc/selinux/plat_file_contexts
-    mount -o bind /dev/mntRAM/selinux/plat_sepolicy.cil /target/system/etc/selinux/plat_sepolicy.cil
-    # Override gatekeeperd
-    mount -o bind /dev/mntRAM/bin/gatekeeperd_hooked /target/system/bin/gatekeeperd
-    # Override build.prop
-    mount -o bind /dev/mntRAM/props/build.prop.system /target/system/build.prop
 fi
+
+# Label the overridden files with the correct SELinux contexts using an in-memory fs
+# /dev/ram0 may not be enough for sepolicy on some devices; it cannot always be grown,
+# so just create our own ramdisk image
+# Note that some overrides may not be present when booting to the internal target;
+# this is fine and they will simply be skipped
+dd if=/dev/zero of=/dev/ramdisk.img bs=1k count=20480
+mke2fs /dev/ramdisk.img
+# Default context for everything in the ramdisk (including directories)
+# If missing, e2fsdroid will abort and leave the filesystem corrupted
+echo '/.* u:object_r:tmpfs:s0' > /dev/file_contexts
+# fstab context
+echo '/fstabs/.* u:object_r:vendor_configs_file:s0' >> /dev/file_contexts
+# sepolicy configuration contexts
+echo '/selinux/plat_file_contexts u:object_r:file_contexts_file:s0' >> /dev/file_contexts
+echo '/selinux/plat_sepolicy.cil u:object_r:sepolicy_file:s0' >> /dev/file_contexts
+# gatekeeperd context
+echo '/bin/gatekeeperd u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
+echo '/bin/gatekeeperd_hooked u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
+echo '/hook/libgatekeeperd_hook.so u:object_r:system_lib_file:s0' >> /dev/file_contexts
+# build.prop can just be a rootfs object
+echo '/props/build.prop.system u:object_r:rootfs:s0' >> /dev/file_contexts
+# Populate the temporary fs & apply the contexts
+e2fsdroid -S /dev/file_contexts -f /dev/override -e -a / -u '0 0 1' /dev/ramdisk.img
+mkdir /dev/mntRAM
+mount /dev/ramdisk.img /dev/mntRAM
+
+function bind_mount_if_exists() {
+    if [ -e "$1" ];then
+        mount -o bind "$1" "$2"
+    fi
+}
+
+# Actually apply the fstab override
+for fstab in $(cd /target/vendor/etc/; echo fstab*);do
+    bind_mount_if_exists /dev/mntRAM/fstabs/$fstab /target/vendor/etc/$fstab
+done
+# Actually apply the sepolicy override
+bind_mount_if_exists /dev/mntRAM/selinux/plat_file_contexts /target/system/etc/selinux/plat_file_contexts
+bind_mount_if_exists /dev/mntRAM/selinux/plat_sepolicy.cil /target/system/etc/selinux/plat_sepolicy.cil
+# Override gatekeeperd
+bind_mount_if_exists /dev/mntRAM/bin/gatekeeperd_hooked /target/system/bin/gatekeeperd
+# Override build.prop
+bind_mount_if_exists /dev/mntRAM/props/build.prop.system /target/system/build.prop
 
 # UNCOMMENTME: To grab kernel logs to ttyGS0 you'll need SELinux permissive
 #(cat /proc/cmdline |sed -E 's/androidboot.selinux=[^ ]*//g' |tr -d '\n'; echo " " androidboot.selinux=permissive ) > /dev/cmdline
