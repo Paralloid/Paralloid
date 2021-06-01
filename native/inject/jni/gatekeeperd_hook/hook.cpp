@@ -4,8 +4,10 @@
 // the DSU uid offset is hard-coded, and thus useless to us.
 #include <android/log.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/system_properties.h>
+#include <unistd.h>
 
 #define LOG_TAG "gatekeeperd_hook"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -36,12 +38,6 @@ status_t _ZN7android8hardware6Parcel11writeUint32Ej(void *self, uint32_t val) {
     if (last_interface_token_gatekeeper_1_0) {
         LOGI("writeUint32: we are in android.hardware.gatekeeper@1.0::IGatekeeper!");
         // The first call to writeUint32 in a IGatekeeper 1.0 Parcel is always `uid`
-        // Cancel the offset set by gatekeeperd by default first
-        // This happens because Paralloid forces gatekeeperd to think that we are booting
-        // a DSU image by replacing the DSU property
-        if (val >= 1000000) {
-            val -= 1000000;
-        }
         LOGI("writeUint32 uid val: %u", val);
         // We apply an offset based on a property passed from Paralloid
         if (__system_property_get("ro.gsid.paralloid_rom_id", prop_tmp)) {
@@ -57,4 +53,26 @@ status_t _ZN7android8hardware6Parcel11writeUint32Ej(void *self, uint32_t val) {
     typedef status_t (*writeUint32_t)(void*, uint32_t);
     writeUint32_t orig_pointer = (writeUint32_t) dlsym(RTLD_NEXT, "_ZN7android8hardware6Parcel11writeUint32Ej");
     return orig_pointer(self, val);
+}
+
+static void create_marker_file(const char *filename) {
+    int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        return;
+    }
+    close(fd);
+}
+
+// see mark_cold_boot() in gatekeeperd
+static void mark_cold_boot() {
+    create_marker_file("/data/misc/gatekeeper/.coldboot");
+    // liblog does not work yet in the library constructor, so create another
+    // marker to signal our existence
+    create_marker_file("/data/misc/gatekeeper/.coldboot_supressed_paralloid");
+}
+
+__attribute__((constructor))
+static void setup() {
+    // Create the cold boot marker, so that gatekeeperd won't clear state of Gatekeeper HAL
+    mark_cold_boot();
 }

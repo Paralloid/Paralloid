@@ -404,19 +404,13 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e 's;,$;;g' /dev/override/fstabs/$fstab
     done
     
-    # Save and patch gatekeeperd; it will be executed by our hook wrapper on non-internal targets
+    # Save the original gatekeeperd; it will be executed by our hook wrapper
     mkdir /dev/override/bin
     cp /target/system/bin/gatekeeperd /dev/override/bin
-    # Make gatekeeperd think that we are running a GSI, so that it does not clear the state of Gatekeeper
-    # This is needed to avoid breaking unlocking on other images
-    # The property will be set later when we override build.prop
-    # TODO: This also needs to be done on the internal target, otherwise it will clear every single image's
-    # gatekeeper state whenever its data gets cleared
-    # TODO: Is there a better way of doing this? I am not sure if all gatekeeperd implementations will
-    # honor this property.
-    sed -i "s/ro.gsid.image_running/ro.gsid.paralloid_rom/" /dev/override/bin/gatekeeperd
     # The hooked gatekeeperd wrapper; this will be bind-mounted upon the original gatekeeperd path
     # TODO: switch the subdirectory based on system architecture (not Paralloid's)
+    # TODO: the hook will also be needed on the internal target to prevent gatekeeperd from clearing
+    #       the state of Gatekeeper
     cp /hook/arm64-v8a/gatekeeperd_hooked /dev/override/bin
     # The actual library that hooks gatekeeperd by LD_PRELOAD
     mkdir /dev/override/hook
