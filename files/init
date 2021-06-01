@@ -419,8 +419,6 @@ if [ $TARGET != "internal" ];then
     # Add our own build properties
     mkdir /dev/override/props
     cp /target/system/build.prop /dev/override/props/build.prop.system
-    # ro.gsid.paralloid_rom replaces ro.gsid.image_running in gatekeeperd binary
-    echo "ro.gsid.paralloid_rom=1" >> /dev/override/props/build.prop.system
     # Pass the image ID to gatekeeperd hook
     echo "ro.gsid.paralloid_rom_id=$TARGET_ID" >> /dev/override/props/build.prop.system
 
