@@ -4,7 +4,6 @@
 // the DSU uid offset is hard-coded, and thus useless to us.
 #define LOG_TAG "gatekeeperd_hook"
 #include <inject/common.h>
-#include <dlfcn.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,9 +26,7 @@ status_t _ZN7android8hardware6Parcel19writeInterfaceTokenEPKc(void *self, const 
     // We have only the 1.0 version right now. If this changes in the future, we'll need to update too
     last_interface_token_gatekeeper_1_0 = (strcmp(interface, "android.hardware.gatekeeper@1.0::IGatekeeper") == 0);
     
-    typedef status_t (*writeInterfaceToken_t)(void*, const char*);
-    writeInterfaceToken_t orig_pointer = (writeInterfaceToken_t) dlsym(RTLD_NEXT, "_ZN7android8hardware6Parcel19writeInterfaceTokenEPKc");
-    return orig_pointer(self, interface);
+    return call_original(status_t, self, interface);
 }
 
 extern "C"
@@ -50,9 +47,7 @@ status_t _ZN7android8hardware6Parcel11writeUint32Ej(void *self, uint32_t val) {
         last_interface_token_gatekeeper_1_0 = false;
     }
     
-    typedef status_t (*writeUint32_t)(void*, uint32_t);
-    writeUint32_t orig_pointer = (writeUint32_t) dlsym(RTLD_NEXT, "_ZN7android8hardware6Parcel11writeUint32Ej");
-    return orig_pointer(self, val);
+    return call_original(status_t, self, val);
 }
 
 static void create_marker_file(const char *filename) {
