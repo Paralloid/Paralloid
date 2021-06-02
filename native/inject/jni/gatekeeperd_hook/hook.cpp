@@ -5,6 +5,7 @@
 #include <android/log.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/system_properties.h>
 #include <unistd.h>
@@ -40,8 +41,9 @@ status_t _ZN7android8hardware6Parcel11writeUint32Ej(void *self, uint32_t val) {
         // The first call to writeUint32 in a IGatekeeper 1.0 Parcel is always `uid`
         LOGI("writeUint32 uid val: %u", val);
         // We apply an offset based on a property passed from Paralloid
-        if (__system_property_get("ro.gsid.paralloid_rom_id", prop_tmp)) {
-            uint32_t offset = atoi(prop_tmp) * 1000000;
+        char *_target_id;
+        if ((_target_id = getenv("PARALLOID_TARGET_ID")) != nullptr) {
+            uint32_t offset = atoi(_target_id) * 1000000;
             uint32_t new_val = val + offset;
             LOGI("writeUint32 uid: %u -> %u", val, new_val);
             val = new_val;

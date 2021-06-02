@@ -292,7 +292,8 @@ else
     if [ ! -f "$TARGET_DIR/id" ];then
         generate-image-id > "$TARGET_DIR/id"
     fi
-    TARGET_ID="$(cat "$TARGET_DIR/id")"
+    # libgatekeeperd_hook.so will read this env variable
+    export PARALLOID_TARGET_ID="$(cat "$TARGET_DIR/id")"
     
     # Create userdata image if it doesn't exist yet
     if [ ! -f "$TARGET_DIR/userdata.img" ];then
@@ -418,14 +419,6 @@ cp /hook/arm64-v8a/gatekeeperd_hooked /dev/override/bin
 # The actual library that hooks gatekeeperd by LD_PRELOAD
 mkdir /dev/override/hook
 cp /hook/arm64-v8a/libgatekeeperd_hook.so /dev/override/hook
-    
-if [ $TARGET != "internal" ];then
-    # Add our own build properties
-    mkdir /dev/override/props
-    cp /target/system/build.prop /dev/override/props/build.prop.system
-    # Pass the image ID to gatekeeperd hook
-    echo "ro.gsid.paralloid_rom_id=$TARGET_ID" >> /dev/override/props/build.prop.system
-fi
 
 # Label the overridden files with the correct SELinux contexts using an in-memory fs
 # /dev/ram0 may not be enough for sepolicy on some devices; it cannot always be grown,
@@ -446,8 +439,6 @@ echo '/selinux/plat_sepolicy.cil u:object_r:sepolicy_file:s0' >> /dev/file_conte
 echo '/bin/gatekeeperd u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
 echo '/bin/gatekeeperd_hooked u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
 echo '/hook/libgatekeeperd_hook.so u:object_r:system_lib_file:s0' >> /dev/file_contexts
-# build.prop can just be a rootfs object
-echo '/props/build.prop.system u:object_r:rootfs:s0' >> /dev/file_contexts
 # Populate the temporary fs & apply the contexts
 e2fsdroid -S /dev/file_contexts -f /dev/override -e -a / -u '0 0 1' /dev/ramdisk.img
 mkdir /dev/mntRAM
@@ -468,8 +459,6 @@ bind_mount_if_exists /dev/mntRAM/selinux/plat_file_contexts /target/system/etc/s
 bind_mount_if_exists /dev/mntRAM/selinux/plat_sepolicy.cil /target/system/etc/selinux/plat_sepolicy.cil
 # Override gatekeeperd
 bind_mount_if_exists /dev/mntRAM/bin/gatekeeperd_hooked /target/system/bin/gatekeeperd
-# Override build.prop
-bind_mount_if_exists /dev/mntRAM/props/build.prop.system /target/system/build.prop
 
 # UNCOMMENTME: To grab kernel logs to ttyGS0 you'll need SELinux permissive
 #(cat /proc/cmdline |sed -E 's/androidboot.selinux=[^ ]*//g' |tr -d '\n'; echo " " androidboot.selinux=permissive ) > /dev/cmdline
