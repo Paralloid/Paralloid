@@ -12,8 +12,6 @@
 
 typedef int32_t status_t;
 
-static thread_local char prop_tmp[PROP_VALUE_MAX];
-
 // Record if the last call to writeInterfaceToken showed we are writing
 // a Parcel for the IGatekeeper interface
 // Define it as thread_local so that we don't need to worry about multi-threading
