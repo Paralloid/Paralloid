@@ -415,7 +415,7 @@ cp /target/system/bin/gatekeeperd /dev/override/bin
 # The hooked gatekeeperd wrapper; this will be bind-mounted upon the original gatekeeperd path
 # The internal target also needs the hook to supress state-clearing of the Gatekeeper HAL
 # TODO: switch the subdirectory based on system architecture (not Paralloid's)
-cp /hook/arm64-v8a/gatekeeperd_hooked /dev/override/bin
+cp /hook/arm64-v8a/hooked_entry /dev/override/bin/gatekeeperd_hooked
 # The actual library that hooks gatekeeperd by LD_PRELOAD
 mkdir /dev/override/hook
 cp /hook/arm64-v8a/libgatekeeperd_hook.so /dev/override/hook

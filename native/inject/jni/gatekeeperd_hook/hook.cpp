@@ -2,16 +2,14 @@
 // to avoid conflict with other images
 // This is similar to what Google does with DSU images; however,
 // the DSU uid offset is hard-coded, and thus useless to us.
-#include <android/log.h>
+#define LOG_TAG "gatekeeperd_hook"
+#include <inject/common.h>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/system_properties.h>
 #include <unistd.h>
-
-#define LOG_TAG "gatekeeperd_hook"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 
 typedef int32_t status_t;
 
