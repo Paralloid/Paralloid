@@ -426,6 +426,7 @@ patchelf --add-needed libgatekeeperd_hook.so /dev/override/bin/gatekeeperd
 # app_process wrappers are for editing ld.config.txt to allow loading our injection libraries
 # because app_process has root privileges when it first starts, allowing us to write to linkerconfig
 # This also adds our hook libraries to the default search paths
+# TODO: Handle non-64-bit devices?
 cp /hook/arm64-v8a/app_process_wrapper /dev/override/bin/app_process64_wrapper
 cp /hook/armeabi-v7a/app_process_wrapper /dev/override/bin/app_process32_wrapper
 
