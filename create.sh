@@ -79,6 +79,8 @@ cp native/libs/armeabi-v7a/e2fsdroid rootfs/bin/e2fsdroid
 chmod 0755 rootfs/bin/e2fsdroid
 cp native/libs/armeabi-v7a/mke2fs rootfs/bin/mke2fs
 chmod 0755 rootfs/bin/mke2fs
+cp native/libs/armeabi-v7a/patchelf rootfs/bin/patchelf
+chmod 0755 rootfs/bin/patchelf
 
 cp native/libs/armeabi-v7a/paralloid_ui rootfs/bin/paralloid_ui
 cp native/libs/armeabi-v7a/minfastbootd rootfs/bin/minfastbootd

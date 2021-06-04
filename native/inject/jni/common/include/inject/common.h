@@ -9,6 +9,7 @@
 // Actual implementation of call_original using a template -- it is impossible
 // to implement it with just macros because C++ mandates argument list in function pointers
 template<typename Ret, typename ... Args>
+__attribute__ ((optnone))
 Ret _call_original(const char *func_name, Args... args) {
     typedef Ret (*_orig_f_t)(Args...);
     _orig_f_t orig_ptr = (_orig_f_t) dlsym(RTLD_NEXT, func_name);

@@ -76,4 +76,14 @@ LOCAL_SRC_FILES := \
     
 include $(BUILD_EXECUTABLE)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := patchelf
+
+LOCAL_SRC_FILES := \
+    patchelf/patchelf.cc \
+
+LOCAL_CPPFLAGS := -fexceptions -DPACKAGE_STRING=\"paralloid-unknown\" -DPAGESIZE=4096
+
+include $(BUILD_EXECUTABLE)
+
 include $(LOCAL_PATH)/external/Android.mk

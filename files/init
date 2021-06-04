@@ -373,6 +373,9 @@ echo "(allow kernel tmpfs (file (read write)))" >> /dev/override/selinux/plat_se
 if [ $TARGET != "internal" ];then
     # Allow kernel to read / write unencrypted_data_file for booting from /data/unencrypted/
     echo "(allow kernel unencrypted_data_file (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+    # app_process{32,64} wrapper
+    # TODO: Remove typepermissive in favor of real policy
+    echo "(typepermissive zygote)" >> /dev/override/selinux/plat_sepolicy.cil
     
     # Patch sepolicy file_contexts to label our userdata loop device correctly
     # This is required for FBE (otherwise vdc will fail)
@@ -408,17 +411,38 @@ if [ $TARGET != "internal" ];then
         sed -i -E -e 's;,$;;g' /dev/override/fstabs/$fstab
     done
 fi
-    
-# Save the original gatekeeperd; it will be executed by our hook wrapper
+
+# Wrapper binaries for LD_PRELOAD injection
 mkdir /dev/override/bin
+# Save the original gatekeeperd; it will be executed by our hook wrapper
 cp /target/system/bin/gatekeeperd /dev/override/bin
 # The hooked gatekeeperd wrapper; this will be bind-mounted upon the original gatekeeperd path
 # The internal target also needs the hook to supress state-clearing of the Gatekeeper HAL
 # TODO: switch the subdirectory based on system architecture (not Paralloid's)
 cp /hook/arm64-v8a/hooked_entry /dev/override/bin/gatekeeperd_hooked
-# The actual library that hooks gatekeeperd by LD_PRELOAD
+
+if [ $TARGET != "internal" ];then
+    # Hook app_process64 and app_process32 to block framework from acquiring IWeaver
+    # We don't want to do this on internal; we'd like internal to be bootable with or without Paralloid
+    cp /hook/arm64-v8a/hooked_entry /dev/override/bin/app_process64_hooked
+    cp /hook/armeabi-v7a/hooked_entry /dev/override/bin/app_process32_hooked
+    # Inject app_process hook into the binary to work around AT_SECURE
+    cp /target/system/bin/app_process64 /dev/override/bin/app_process64_orig
+    cp /target/system/bin/app_process32 /dev/override/bin/app_process32_orig
+    patchelf --add-needed libapp_process64_hook.so /dev/override/bin/app_process64_orig
+    patchelf --add-needed libapp_process32_hook.so /dev/override/bin/app_process32_orig
+fi
+
+# LD_PRELOAD hook libraries
 mkdir /dev/override/hook
+# The actual library that hooks gatekeeperd by LD_PRELOAD
 cp /hook/arm64-v8a/libgatekeeperd_hook.so /dev/override/hook
+
+if [ $TARGET != "internal" ];then
+    # app_process{32,64} hooks
+    cp /hook/arm64-v8a/libapp_process_hook.so /dev/override/hook/libapp_process64_hook.so
+    cp /hook/armeabi-v7a/libapp_process_hook.so /dev/override/hook/libapp_process32_hook.so
+fi
 
 # Label the overridden files with the correct SELinux contexts using an in-memory fs
 # /dev/ram0 may not be enough for sepolicy on some devices; it cannot always be grown,
@@ -439,6 +463,10 @@ echo '/selinux/plat_sepolicy.cil u:object_r:sepolicy_file:s0' >> /dev/file_conte
 echo '/bin/gatekeeperd u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
 echo '/bin/gatekeeperd_hooked u:object_r:gatekeeperd_exec:s0' >> /dev/file_contexts
 echo '/hook/libgatekeeperd_hook.so u:object_r:system_lib_file:s0' >> /dev/file_contexts
+# app_process{32,64}
+echo '/bin/app_process.* u:object_r:zygote_exec:s0' >> /dev/file_contexts
+echo '/hook/libapp_process.* u:object_r:system_lib_file:s0' >> /dev/file_contexts
+echo '/hook/libandroid_runtime.* u:object_r:system_lib_file:s0' >> /dev/file_contexts
 # Populate the temporary fs & apply the contexts
 e2fsdroid -S /dev/file_contexts -f /dev/override -e -a / -u '0 0 1' /dev/ramdisk.img
 mkdir /dev/mntRAM
@@ -459,6 +487,12 @@ bind_mount_if_exists /dev/mntRAM/selinux/plat_file_contexts /target/system/etc/s
 bind_mount_if_exists /dev/mntRAM/selinux/plat_sepolicy.cil /target/system/etc/selinux/plat_sepolicy.cil
 # Override gatekeeperd
 bind_mount_if_exists /dev/mntRAM/bin/gatekeeperd_hooked /target/system/bin/gatekeeperd
+# Override app_process
+bind_mount_if_exists /dev/mntRAM/bin/app_process64_orig /target/system/bin/app_process64
+bind_mount_if_exists /dev/mntRAM/bin/app_process64_hooked /target/system/bin/app_process64
+bind_mount_if_exists /dev/mntRAM/bin/app_process32_orig /target/system/bin/app_process32
+bind_mount_if_exists /dev/mntRAM/bin/app_process32_hooked /target/system/bin/app_process32
+bind_mount_if_exists /dev/mntRAM/hook/libandroid_runtime64.so /target/system/lib64/libandroid_runtime.so
 
 # UNCOMMENTME: To grab kernel logs to ttyGS0 you'll need SELinux permissive
 #(cat /proc/cmdline |sed -E 's/androidboot.selinux=[^ ]*//g' |tr -d '\n'; echo " " androidboot.selinux=permissive ) > /dev/cmdline
