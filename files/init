@@ -434,6 +434,9 @@ if [ $TARGET != "internal" ];then
     # We don't do this on the internal target since we'd like it to boot without Paralloid
     cp /target/system/bin/app_process64 /dev/override/bin/
     cp /target/system/bin/app_process32 /dev/override/bin/
+    # The hook only needs to be injected to the main binary; symbols required by dependencies
+    # will also resolve to this first.
+    # (in this case, libandroid_runtime.so will also link to symbols exported by the hook library)
     patchelf --add-needed libapp_process64_hook.so /dev/override/bin/app_process64
     patchelf --add-needed libapp_process32_hook.so /dev/override/bin/app_process32
 fi
