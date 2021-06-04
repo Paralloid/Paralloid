@@ -368,8 +368,14 @@ echo "(allow kernel unlabeled (file (read write)))" >> /dev/override/selinux/pla
 # Allow kernel to read / write tmpfs files for our ramdisk (/dev/mntRAM) to work
 echo "(allow kernel tmpfs (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
 # app_process{32,64} wrapper
-# TODO: Remove typepermissive in favor of real policy
-echo "(typepermissive zygote)" >> /dev/override/selinux/plat_sepolicy.cil
+# Allow self-execution
+echo "(allow zygote zygote_exec (file (read getattr execute_no_trans)))" >> /dev/override/selinux/plat_sepolicy.cil
+# Allow app_process to access and overwrite linkerconfig
+echo "(allow zygote linkerconfig_file (file (getattr setattr open read write create)))" >> /dev/override/selinux/plat_sepolicy.cil
+echo "(allow zygote linkerconfig_file (dir (open read write search add_name)))" >> /dev/override/selinux/plat_sepolicy.cil
+# Allow self-unmount
+# TODO: Can we label the mount point properly somehow?
+echo "(allow zygote labeledfs (filesystem (unmount)))" >> /dev/override/selinux/plat_sepolicy.cil
 
 if [ $TARGET != "internal" ];then
     # Allow kernel to read / write unencrypted_data_file for booting from /data/unencrypted/
