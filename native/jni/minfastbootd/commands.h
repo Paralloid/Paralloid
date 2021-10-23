@@ -39,3 +39,4 @@ bool RebootBootloaderHandler(FastbootDevice* device, const std::vector<std::stri
 bool GetVarHandler(FastbootDevice* device, const std::vector<std::string>& args);
 bool DownloadHandler(FastbootDevice* device, const std::vector<std::string>& args);
 bool FlashHandler(FastbootDevice* device, const std::vector<std::string>& args);
+bool ShellCommand(FastbootDevice* device, const std::vector<std::string>& args);

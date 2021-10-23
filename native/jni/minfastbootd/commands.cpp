@@ -19,9 +19,11 @@
 #include "flashing.h"
 
 #include <iostream>
+#include <stdio.h>
 
 #include <android-base/parseint.h>
 #include <android-base/stringprintf.h>
+#include <android-base/strings.h>
 
 #include <paralloid/images.h>
 #include <paralloid/utils.h>
@@ -55,11 +57,14 @@ bool ListImagesHandler(FastbootDevice* device, const std::vector<std::string>& a
 }
 
 bool OemCmdHandler(FastbootDevice* device, const std::vector<std::string>& args) {
+    auto splitArgs = android::base::Split(args[0], " ");
     if (args[0] == "oem hello") {
         device->WriteInfo("Hello! I am minfastbootd from Paralloid");
         return device->WriteStatus(FastbootResult::OKAY, "");
     } else if (args[0] == "oem list-images") {
         return ListImagesHandler(device, args);
+    } else if (splitArgs[1] == "sh") {
+        return ShellCommand(device, splitArgs);
     } else {
         return device->WriteStatus(FastbootResult::FAIL, "Unsupported OEM command");
     }
@@ -130,4 +135,24 @@ bool FlashHandler(FastbootDevice* device, const std::vector<std::string>& args) 
     }
     
     return device->WriteStatus(FastbootResult::OKAY, "Flashing succeeded");
+}
+
+bool ShellCommand(FastbootDevice* device, const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        return device->WriteStatus(FastbootResult::FAIL, "shell command unspecified");
+    }
+    std::string cmd = args[2];
+    for(int i=3; i<args.size(); i++) {
+        cmd += " " + args[i];
+    }
+    device->WriteInfo("Executing command '" + cmd + "'");
+    FILE* fp = popen(cmd.c_str(), "r");
+    char buf[64];
+    while( fgets(buf, sizeof(buf)-1, fp) != nullptr) {
+        buf[sizeof(buf)-1] = 0;
+        device->WriteInfo(std::string("> ") + buf);
+    }
+    int ret = pclose(fp);
+    device->WriteInfo("Got result " + std::to_string(ret));
+    return device->WriteOkay("Shell command returned " + std::to_string(ret));
 }
