@@ -73,7 +73,15 @@ LOCAL_STATIC_LIBRARIES := libbase libparalloid
 
 LOCAL_SRC_FILES := \
     move_mount_tree/main.cpp \
+
+include $(BUILD_EXECUTABLE)
     
+include $(CLEAR_VARS)
+LOCAL_MODULE := init_sar
+
+LOCAL_SRC_FILES := \
+    misc/init_sar.cpp
+
 include $(BUILD_EXECUTABLE)
 
 include $(LOCAL_PATH)/external/Android.mk
