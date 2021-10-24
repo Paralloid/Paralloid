@@ -5,6 +5,7 @@
 #include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv, char **envp) {
     // What we really need is selinuxfs on /sys/fs/selinux, because bionic will require /sys/fs/selinux/null for pid != 1
@@ -33,14 +34,7 @@ int main(int argc, char **argv, char **envp) {
     mount("tmpfs", "/debug_ramdisk", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
                     "mode=0755,uid=0,gid=0");
 
-
-    // TODO: first_stage_init's DoFirstMount
-    // Read fstab from /sys/firmware/fdt to mount partitions
-
-    // TODO: "vendor" partition remains to be mounted
-    // TODO: "/dev" remains to be filled (this is a /dev that will be used by Android second stage init)
-    // Those things will probably best better done from init script itself rather than from this C++ file
-
+    setenv("PARALLOID_NO_PREPARE", "1", 1);
     char *new_argv[] = { (char*)"init", NULL };
-    execve("/system/bin/init", new_argv, envp);
+    execve("/system/bin/init", new_argv, environ);
 }

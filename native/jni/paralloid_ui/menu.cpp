@@ -4,6 +4,7 @@
 
 #include <paralloid/utils.h>
 #include <sys/reboot.h>
+#include <stdlib.h>
 
 #define DEFAULT_HELP_TEXT \
     "Use volume up/down and power to select. " \
@@ -65,6 +66,9 @@ optional<string> MainMenu::getExtraText() {
 void MainMenu::populateItems() {
     if (fs::exists(INTERNAL_SYSTEM_PATH)) {
         items->push_back(MenuItem(ACTION_BOOT_INTERNAL, "Boot from internal storage"));
+    }
+    if (fs::exists(std::string("/dev/block/by-name/system_") + getenv("PARALLOID_CURRENT_SLOT"))) {
+        items->push_back(MenuItem(ACTION_BOOT_INTERNAL, "Boot from other slot's system"));
     }
     
     if (fs::exists(USERDATA_BASE_PATH)) {
