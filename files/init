@@ -26,6 +26,16 @@ fi
 # depend on this hack.
 export PARALLOID_ROOT_BLKDEV=$(basename $(cat /proc/mounts | grep " /paralloid_oldroot ext4 " | cut -d ' ' -f 1))
 
+echo "Got blkdev $PARALLOID_NO_PREPARE " > /dev/kmsg
+
+currentSlot=$(sed -nE 's/.*androidboot.slot_suffix=_?([a-z]).*/\1/p' /proc/cmdline)
+otherSlot=b
+if [ "$currentSlot" = b ];then
+    otherSlot=a
+fi
+
+export PARALLOID_CURRENT_SLOT=$currentSlot
+
 # Unmount the old root filesystem to free up the system partition
 recursive_umount /paralloid_oldroot
 
@@ -46,6 +56,8 @@ mount -t configfs none /config
 mount -t tmpfs none /dev
 mount -t tmpfs none /tmp
 mount -t pstore none /sys/fs/pstore
+
+echo /bin/hotplug > /proc/sys/kernel/hotplug
 
 mdev -s
 mdev -d
@@ -222,6 +234,8 @@ fi
 # Mount sdcard asynchronously (because the controller comes up slow)
 (
     hostController="$(readlink /dev/block/by-name/super |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
+    [ -z "$hostController" ] && hostController="$(readlink /dev/block/by-name/system |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
+    [ -z "$hostController" ] && hostController="$(readlink /dev/block/by-name/system_a |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
     sdcard=""
     for k in $(seq 1 15);do
         for i in $(find /dev -name 'mmcblk*p1');do
@@ -253,6 +267,47 @@ done
 # from the marker file
 TARGET="$(cat /dev/.paralloid_boot_target)"
 TARGET_DIR=$(dirname $TARGET)
+
+if [ -n "$PARALLOID_NO_PREPARE" ];then
+    echo > $gadget/UDC
+    rm $gadget/configs/c.1/f4
+    rm $gadget/configs/c.1/f3
+    rm $gadget/configs/c.1/f2
+    rm $gadget/configs/c.1/f1
+    rmdir $gadget/configs/c.1/strings/0x409/
+    rmdir $gadget/configs/c.1/strings/0x409
+    rmdir $gadget/configs/c.1
+    rmdir $gadget/configs/c.1/
+
+    # On non-dynamic SaR, we only support booting from the other slot
+    if [ "$TARGET" = internal ];then
+        mount /dev/block/by-name/system_$otherSlot /target
+    else
+        mount -o ro,loop $TARGET /target
+    fi
+    #mount -o bind /dev/null /target/system/etc/selinux/plat_sepolicy_and_mapping.sha256
+    mkdir -p /dev/override
+    mkdir -p /dev/override/selinux
+    cp /target/system/etc/selinux/plat_sepolicy.cil /dev/override/selinux/
+    sed -i -E -e 's;\(type kernel\);(type kernel)\n(typepermissive kernel);' /dev/override/selinux/plat_sepolicy.cil
+    echo "(allow kernel unlabeled (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+    echo "(allow kernel tmpfs (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+    echo "(allow kernel unencrypted_data_file (file (read write)))" >> /dev/override/selinux/plat_sepolicy.cil
+    dd if=/dev/zero of=/dev/ramdisk.img bs=1k count=20480
+    mke2fs /dev/ramdisk.img
+    echo '/.* u:object_r:tmpfs:s0' > /dev/file_contexts
+    echo '/selinux/plat_file_contexts u:object_r:file_contexts_file:s0' >> /dev/file_contexts
+    echo '/selinux/plat_sepolicy.cil u:object_r:sepolicy_file:s0' >> /dev/file_contexts
+    e2fsdroid -S /dev/file_contexts -f /dev/override -e -a / -u '0 0 1' /dev/ramdisk.img
+    mkdir /dev/mntRAM
+    mount -o loop /dev/ramdisk.img /dev/mntRAM
+    mount -o bind /dev/mntRAM/selinux/plat_sepolicy.cil /target/system/etc/selinux/plat_sepolicy.cil
+
+    cd /target
+    pivot_root /target debug_ramdisk
+
+    exec /debug_ramdisk/bin/busybox chroot . /init > /dev/kmsg
+fi
 
 if [ $TARGET == "internal" ];then
     mount -o ro /dev/block/mapper/system_orig /target
@@ -460,6 +515,7 @@ pivot_root /target debug_ramdisk
 echo HEHE > /dev/kmsg
 
 unset PATH
+
 exec /debug_ramdisk/bin/busybox chroot . /system/bin/init selinux_setup > /dev/kmsg
 
 #telnetd -F
