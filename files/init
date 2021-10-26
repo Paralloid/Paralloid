@@ -234,6 +234,8 @@ fi
 # Mount sdcard asynchronously (because the controller comes up slow)
 (
     hostController="$(readlink /dev/block/by-name/super |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
+    [ -z "$hostController" ] && hostController="$(readlink /dev/block/by-name/system |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
+    [ -z "$hostController" ] && hostController="$(readlink /dev/block/by-name/system_a |sed -E 's;/dev/(.*)p[0-9]*;\1;g')"
     sdcard=""
     for k in $(seq 1 15);do
         for i in $(find /dev -name 'mmcblk*p1');do
